@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "Seatsurfing",
+    "slug": "seatsurfing",
+    "description": "Free Seating und Co-Working für Ihre Mitarbeiter.",
+    "scheme": "seatsurfing",
+    "privacy": "public",
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "version": "1.0.2",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "de.seatsurfing.app",
+      "buildNumber": "1.0.2"
+    },
+    "android": {
+      "package": "de.seatsurfing.app",
+      "versionCode": 3,
+      "permissions": []
+    }
+  }
+}
