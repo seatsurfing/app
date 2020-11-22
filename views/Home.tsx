@@ -8,9 +8,12 @@ import { Ajax, Organization, AuthProvider } from '../commons';
 import { AuthContext } from '../types/AuthContextData';
 import Storage from '../types/Storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { withTranslation } from 'react-i18next';
+import { i18n } from 'i18next';
 
 interface Props {
   navigation: StackNavigationProp<RootStackParamList>
+  i18n: i18n
 }
 
 interface State {
@@ -22,7 +25,7 @@ interface State {
   loading: boolean
 }
 
-export default class Home extends React.Component<Props, State> {
+class Home extends React.Component<Props, State> {
   static contextType = AuthContext;
   org: Organization | null;
 
@@ -213,23 +216,23 @@ export default class Home extends React.Component<Props, State> {
     if (this.state.requirePassword) {
       let invalidText = <></>;
       if (this.state.invalid) {
-        invalidText = <Text style={style.invalidText}>Ungültiges Kennwort.</Text>;
+        invalidText = <Text style={style.invalidText}>{this.props.i18n.t("errorInvalidPassword")}</Text>;
       }
       return (
         <SafeAreaView style={Styles.containerCenter}>
           <KeyboardAvoidingView contentContainerStyle={Styles.containerCenter} behavior={Platform.OS == "ios" ? "padding" : "height"}>
             <ScrollView contentContainerStyle={Styles.containerCenter}>
-              <Text style={style.claim}>Als {this.state.email.toLowerCase()} an {this.org?.name} anmelden:</Text>
+              <Text style={style.claim}>{this.props.i18n.t("signinAsAt", {"user": this.state.email.toLowerCase(), "org": this.org?.name})}</Text>
               {invalidText}
-              <TextInput style={style.textInput} value={this.state.password} onChangeText={text => this.setState({ password: text })} placeholder="Kennwort" secureTextEntry={true} autoFocus={true} />
+              <TextInput style={style.textInput} value={this.state.password} onChangeText={text => this.setState({ password: text })} placeholder={this.props.i18n.t("password")} secureTextEntry={true} autoFocus={true} />
               <View>
                 <TouchableHighlight style={style.button} onPress={this.onPasswordSubmit} disabled={!this.canPasswordLogin()}>
-                  <Text style={this.canPasswordLogin() ? style.buttonText : style.buttonTextDisabled}>Anmelden</Text>
+                  <Text style={this.canPasswordLogin() ? style.buttonText : style.buttonTextDisabled}>{this.props.i18n.t("signin")}</Text>
                 </TouchableHighlight>
               </View>
               <View>
                 <TouchableHighlight style={style.buttonSeconday} onPress={() => this.setState({ invalid: false, requirePassword: false, providers: null, loading: false })}>
-                  <Text style={style.buttonText}>Zurück</Text>
+                  <Text style={style.buttonText}>{this.props.i18n.t("back")}</Text>
                 </TouchableHighlight>
               </View>
             </ScrollView>
@@ -240,9 +243,9 @@ export default class Home extends React.Component<Props, State> {
 
     if (this.state.providers != null) {
       let buttons = this.state.providers.map(provider => this.renderAuthProviderButton(provider, style));
-      let providerSelection = <Text style={style.claim}>Als {this.state.email.toLowerCase()} an {this.org?.name} anmelden mit:</Text>;
+      let providerSelection = <Text style={style.claim}>{this.props.i18n.t("signinAsAt", {"user": this.state.email.toLowerCase(), "org": this.org?.name})}</Text>;
       if (buttons.length === 0) {
-        providerSelection = <Text style={style.claim}>Für diesen Nutzer stehen keine Anmelde-Möglichkeiten zur Verfügung.</Text>
+        providerSelection = <Text style={style.claim}>{this.props.i18n.t("errorNoAuthProviders")}</Text>
       }
       return (
         <SafeAreaView style={Styles.containerCenter}>
@@ -251,7 +254,7 @@ export default class Home extends React.Component<Props, State> {
             {buttons}
             <View>
               <TouchableHighlight style={style.buttonSeconday} onPress={() => this.setState({ invalid: false, requirePassword: false, providers: null, loading: false })}>
-                <Text style={style.buttonText}>Zurück</Text>
+                <Text style={style.buttonText}>{this.props.i18n.t("back")}</Text>
               </TouchableHighlight>
             </View>
           </ScrollView>
@@ -261,18 +264,18 @@ export default class Home extends React.Component<Props, State> {
 
     let invalidText = <></>;
     if (this.state.invalid) {
-      invalidText = <Text style={style.invalidText}>Fehler bei der Anmeldung. Möglicherweise ist diese E-Mail-Adresse nicht mit einer Organisation verknüpft.</Text>;
+      invalidText = <Text style={style.invalidText}>{this.props.i18n.t("errorLogin")}</Text>;
     }
     return (
       <SafeAreaView style={Styles.containerCenter}>
         <KeyboardAvoidingView contentContainerStyle={Styles.containerCenter} behavior={Platform.OS == "ios" ? "padding" : "height"}>
           <ScrollView contentContainerStyle={Styles.containerCenter}>
             <Image source={require("../assets/logo.png")} style={style.logo} />
-            <Text style={style.claim}>Finde Deinen Platz.</Text>
+            <Text style={style.claim}>{this.props.i18n.t("findYourPlace")}</Text>
             {invalidText}
-            <TextInput style={style.textInput} value={this.state.email} onChangeText={text => this.setState({ email: text })} placeholder="max@mustermann.de" keyboardType="email-address" />
+            <TextInput style={style.textInput} value={this.state.email} onChangeText={text => this.setState({ email: text })} placeholder={this.props.i18n.t("emailPlaceholder")} keyboardType="email-address" />
             <TouchableHighlight style={style.button} onPress={this.submitLoginForm} disabled={!this.canLogin()}>
-              <Text style={this.canLogin() ? style.buttonText : style.buttonTextDisabled}>Loslegen</Text>
+              <Text style={this.canLogin() ? style.buttonText : style.buttonTextDisabled}>{this.props.i18n.t("getStarted")}</Text>
             </TouchableHighlight>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -280,3 +283,5 @@ export default class Home extends React.Component<Props, State> {
     )
   }
 }
+
+export default withTranslation()(Home as any);

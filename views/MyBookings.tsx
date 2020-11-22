@@ -6,9 +6,12 @@ import { FlatList } from 'react-native-gesture-handler';
 import { Booking } from '../commons';
 import { Formatting } from '../commons';
 import ModalDialog from './ModalDialog';
+import { withTranslation } from 'react-i18next';
+import { i18n } from 'i18next';
 
 interface Props {
   navigation: StackNavigationProp<RootStackParamList>
+  i18n: i18n
 }
 
 interface State {
@@ -17,7 +20,7 @@ interface State {
   cancelled: boolean
 }
 
-export default class MyBookings extends React.Component<Props, State> {
+class MyBookings extends React.Component<Props, State> {
   data: Booking[];
 
   constructor(props: Props) {
@@ -59,8 +62,8 @@ export default class MyBookings extends React.Component<Props, State> {
       <TouchableOpacity style={Styles.listItem} onPress={() => this.onItemPress(item)}>
         <Text style={Styles.subject}>{Formatting.getDateOffsetText(item.enter, item.leave)}</Text>
         <Text style={Styles.content}>{item.space.location.name}, {item.space.name}</Text>
-        <Text style={Styles.subContent}>Von: {Formatting.getFormatter().format(item.enter)}</Text>
-        <Text style={Styles.subContent}>Bis: {Formatting.getFormatter().format(item.leave)}</Text>
+        <Text style={Styles.subContent}>{this.props.i18n.t("enter")}: {Formatting.getFormatter().format(item.enter)}</Text>
+        <Text style={Styles.subContent}>{this.props.i18n.t("leave")}: {Formatting.getFormatter().format(item.leave)}</Text>
       </TouchableOpacity>
     );
   }
@@ -81,15 +84,15 @@ export default class MyBookings extends React.Component<Props, State> {
     if (this.state.selectedItem) {
       infoModal = (
         <ModalDialog visible={this.state.selectedItem != null}>
-          <Text style={Styles.text}>Platz: {this.state.selectedItem.space.name}</Text>
-          <Text style={Styles.text}>Bereich: {this.state.selectedItem.space.location.name}</Text>
-          <Text style={Styles.text}>Beginn: {Formatting.getFormatterShort().format(new Date(this.state.selectedItem.enter))}</Text>
-          <Text style={Styles.text}>Ende: {Formatting.getFormatterShort().format(new Date(this.state.selectedItem.leave))}</Text>
+          <Text style={Styles.text}>{this.props.i18n.t("space")}: {this.state.selectedItem.space.name}</Text>
+          <Text style={Styles.text}>{this.props.i18n.t("area")}: {this.state.selectedItem.space.location.name}</Text>
+          <Text style={Styles.text}>{this.props.i18n.t("enter")}: {Formatting.getFormatterShort().format(new Date(this.state.selectedItem.enter))}</Text>
+          <Text style={Styles.text}>{this.props.i18n.t("leave")}: {Formatting.getFormatterShort().format(new Date(this.state.selectedItem.leave))}</Text>
           <View style={style.button}>
-            <Button title="Stornieren" onPress={() => { this.state.selectedItem ? this.cancelBooking(this.state.selectedItem) : {} }} color="red" />
+            <Button title={this.props.i18n.t("cancel")} onPress={() => { this.state.selectedItem ? this.cancelBooking(this.state.selectedItem) : {} }} color="red" />
           </View>
           <View style={style.button}>
-            <Button title="Abbrechen" onPress={() => { this.setState({ selectedItem: null }) }} />
+            <Button title={this.props.i18n.t("ok")} onPress={() => { this.setState({ selectedItem: null }) }} />
           </View>
         </ModalDialog>
       );
@@ -98,7 +101,7 @@ export default class MyBookings extends React.Component<Props, State> {
       if (this.data.length > 0) {
         list = <FlatList data={this.data} renderItem={({ item }) => this.renderItem(item)} keyExtractor={item => item.id} style={Styles.list} />;
       } else {
-        list = <View style={Styles.containerCenter}><Text style={Styles.text}>Keine Buchungen gefunden.</Text></View>;
+        list = <View style={Styles.containerCenter}><Text style={Styles.text}>{this.props.i18n.t("noBookings")}</Text></View>;
       }
     }
     return (
@@ -110,3 +113,5 @@ export default class MyBookings extends React.Component<Props, State> {
     );
   }
 }
+
+export default withTranslation()(MyBookings as any);

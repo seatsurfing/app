@@ -2,6 +2,7 @@ import 'react-native-gesture-handler';
 import 'intl';
 import 'intl/locale-data/jsonp/de';
 import React from 'react';
+import './types/i18n';
 import { NavigationContainer } from '@react-navigation/native';
 import { enableScreens } from 'react-native-screens';
 import { createNativeStackNavigator } from 'react-native-screens/native-stack';
@@ -16,6 +17,8 @@ import { Styles } from './types/Styles';
 import { User, Ajax, Settings as OrgSettings } from './commons';
 import Constants from "expo-constants";
 import Storage from './types/Storage';
+import { withTranslation } from 'react-i18next';
+import { i18n } from 'i18next';
 
 enableScreens();
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -26,9 +29,10 @@ if (Platform.OS === 'android') {
 }
 
 interface Props {
+  i18n: i18n
 }
 
-export default class App extends React.Component<Props, AuthContextData> {
+class App extends React.Component<Props, AuthContextData> {
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -112,9 +116,9 @@ export default class App extends React.Component<Props, AuthContextData> {
             ) : (
               <>
                 <Stack.Screen name="Search" component={Search} options={{title: "Seatsurfing", headerLargeTitle: true}} />
-                <Stack.Screen name="SelectLocation" component={SelectLocation} options={{title: "Bereich"}} />
-                <Stack.Screen name="SearchResult" component={SearchResult} options={{title: "Wähle Deinen Platz"}} />
-                <Stack.Screen name="MyBookings" component={MyBookings} options={{title: "Meine Buchungen"}} />
+                <Stack.Screen name="SelectLocation" component={SelectLocation} options={{title: this.props.i18n.t("area")}} />
+                <Stack.Screen name="SearchResult" component={SearchResult} options={{title: this.props.i18n.t("selectSpace")}} />
+                <Stack.Screen name="MyBookings" component={MyBookings} options={{title: this.props.i18n.t("myBookings")}} />
               </>
             )}
           </Stack.Navigator>
@@ -123,3 +127,5 @@ export default class App extends React.Component<Props, AuthContextData> {
     )
   }
 }
+
+export default withTranslation()(App as any);

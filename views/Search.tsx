@@ -7,10 +7,13 @@ import { Formatting, Location, Booking } from '../commons';
 import { RouteProp } from '@react-navigation/native';
 import { AuthContext } from '../types/AuthContextData';
 import Storage from '../types/Storage';
+import { withTranslation } from 'react-i18next';
+import { i18n } from 'i18next';
 
 interface Props {
   navigation: StackNavigationProp<RootStackParamList>
-  route: RouteProp<RootStackParamList, "Search">;
+  route: RouteProp<RootStackParamList, "Search">
+  i18n: i18n
 }
 
 interface State {
@@ -26,7 +29,7 @@ interface State {
   canSearchHint: string
 }
 
-export default class Search extends React.Component<Props, State> {
+class Search extends React.Component<Props, State> {
   static contextType = AuthContext;
   curBookingCount: number = 0;
 
@@ -36,7 +39,7 @@ export default class Search extends React.Component<Props, State> {
       enter: new Date(),
       leave: new Date(),
       locationId: "",
-      locationTitle: "Keine",
+      locationTitle: this.props.i18n.t("none"),
       enterMode: "date",
       leaveMode: "date",
       showEnterPicker: false,
@@ -192,7 +195,7 @@ export default class Search extends React.Component<Props, State> {
     if (this.state.locationTitle) {
       return this.state.locationTitle;
     } else {
-      return "Keiner";
+      return this.props.i18n.t("none");
     }
   }
 
@@ -205,20 +208,20 @@ export default class Search extends React.Component<Props, State> {
     let hint = "";
     if (this.curBookingCount >= this.context.maxBookingsPerUser) {
       res = false;
-      hint = "Das Limit von " + this.context.maxBookingsPerUser + " Buchungen wurde erreicht.";
+      hint = this.props.i18n.t("errorBookingLimit", {"num": this.context.maxBookingsPerUser});
     }
     if (!this.state.locationId) {
       res = false;
-      hint = "Bitte einen Bereich auswählen.";
+      hint = this.props.i18n.t("errorPickArea");
     }
     let now = new Date();
     if (this.state.enter.getTime() <= now.getTime()) {
       res = false;
-      hint = "Der Beginn muss in der Zukunft liegen.";
+      hint = this.props.i18n.t("errorEnterFuture");
     }
     if (this.state.leave.getTime() <= this.state.enter.getTime()) {
       res = false;
-      hint = "Das Ende muss nach dem Beginn liegen.";
+      hint = this.props.i18n.t("errorLeaveAfterEnter");
     }
     const MS_PER_MINUTE = 1000 * 60;
     const MS_PER_HOUR = MS_PER_MINUTE * 60;
@@ -226,12 +229,12 @@ export default class Search extends React.Component<Props, State> {
     let bookingAdvanceDays = Math.floor((this.state.enter.getTime() - new Date().getTime()) / MS_PER_DAY);
     if (bookingAdvanceDays > this.context.maxDaysInAdvance) {
       res = false;
-      hint = "Die Buchung darf maximal " + this.context.maxDaysInAdvance + " Tage in der Zukunft liegen.";
+      hint = this.props.i18n.t("errorDaysAdvance", {"num": this.context.maxDaysInAdvance});
     }
     let bookingDurationHours = Math.floor((this.state.leave.getTime() - this.state.enter.getTime()) / MS_PER_MINUTE) / 60;
     if (bookingDurationHours > this.context.maxBookingDurationHours) {
       res = false;
-      hint = "Die maximale Buchungsdauer beträgt " + this.context.maxBookingDurationHours + " Stunden.";
+      hint = this.props.i18n.t("errorBookingDuration", {"num": this.context.maxBookingDurationHours});
     }
     this.setState({
       canSearch: res,
@@ -249,11 +252,11 @@ export default class Search extends React.Component<Props, State> {
       <SafeAreaView style={Styles.container}>
         <ScrollView>
           <View>
-            <Text style={Styles.sectionHeader}>Platz buchen</Text>
+            <Text style={Styles.sectionHeader}>{this.props.i18n.t("bookSeat")}</Text>
           </View>
           <View style={Styles.section}>
             <View style={Styles.tableRow}>
-              <Text style={Styles.text}>Beginn</Text>
+              <Text style={Styles.text}>{this.props.i18n.t("enter")}</Text>
               <Text style={Styles.textTableValue} onPress={() => this.startEnterPicking()}>{Formatting.getFormatter().format(this.state.enter)}</Text>
             </View>
             {this.state.showEnterPicker && (
@@ -261,7 +264,7 @@ export default class Search extends React.Component<Props, State> {
             )}
             <View style={Styles.horizontalLine}></View>
             <View style={Styles.tableRow}>
-              <Text style={Styles.text}>Ende</Text>
+              <Text style={Styles.text}>{this.props.i18n.t("leave")}</Text>
               <Text style={Styles.textTableValue} onPress={() => this.startLeavePicking()}>{Formatting.getFormatter().format(this.state.leave)}</Text>
             </View>
             {this.state.showLeavePicker && (
@@ -269,33 +272,33 @@ export default class Search extends React.Component<Props, State> {
             )}
             <View style={Styles.horizontalLine}></View>
             <View style={Styles.tableRow}>
-              <Text style={Styles.text}>Bereich</Text>
+              <Text style={Styles.text}>{this.props.i18n.t("area")}</Text>
               <Text style={Styles.textTableValue} onPress={() => this.props.navigation.navigate("SelectLocation")}>{this.getSelectedLocationName()} &#10217;</Text>
             </View>
             <View style={Styles.horizontalLine}></View>
             <View style={Styles.tableRow}>
-              <TouchableOpacity disabled={!this.state.canSearch} onPress={() => this.props.navigation.navigate("SearchResult", { enter: this.state.enter.getTime(), leave: this.state.leave.getTime(), locationId: this.getSelectedLocationId() })}><Text style={this.state.canSearch ? Styles.formButtom : Styles.formButtomDisabled}>{this.state.canSearch ? "Plätze suchen" : this.state.canSearchHint}</Text></TouchableOpacity>
+              <TouchableOpacity disabled={!this.state.canSearch} onPress={() => this.props.navigation.navigate("SearchResult", { enter: this.state.enter.getTime(), leave: this.state.leave.getTime(), locationId: this.getSelectedLocationId() })}><Text style={this.state.canSearch ? Styles.formButtom : Styles.formButtomDisabled}>{this.state.canSearch ? this.props.i18n.t("searchSpace") : this.state.canSearchHint}</Text></TouchableOpacity>
             </View>
           </View>
           <View>
-            <Text style={Styles.sectionHeader}>Meine Buchungen</Text>
+            <Text style={Styles.sectionHeader}>{this.props.i18n.t("myBookings")}</Text>
           </View>
           <View style={Styles.section}>
             <View style={Styles.tableRow}>
-              <TouchableOpacity onPress={() => this.props.navigation.navigate("MyBookings")}><Text style={Styles.formButtom}>Meine Buchungen</Text></TouchableOpacity>
+              <TouchableOpacity onPress={() => this.props.navigation.navigate("MyBookings")}><Text style={Styles.formButtom}>{this.props.i18n.t("myBookings")}</Text></TouchableOpacity>
             </View>
           </View>
           <View>
-            <Text style={Styles.sectionHeader}>Einstellungen</Text>
+            <Text style={Styles.sectionHeader}>{this.props.i18n.t("settings")}</Text>
           </View>
           <View style={Styles.section}>
             <View style={Styles.tableRow}>
-              <Text style={Styles.text}>Benutzer</Text>
+              <Text style={Styles.text}>{this.props.i18n.t("user")}</Text>
               <Text style={Styles.textTableValue}>{this.context.username.toLowerCase()}</Text>
             </View>
             <View style={Styles.horizontalLine}></View>
             <View style={Styles.tableRow}>
-              <TouchableOpacity onPress={() => this.logout()}><Text style={Styles.formButtomWarning}>Abmelden</Text></TouchableOpacity>
+              <TouchableOpacity onPress={() => this.logout()}><Text style={Styles.formButtomWarning}>{this.props.i18n.t("signout")}</Text></TouchableOpacity>
             </View>
           </View>
         </ScrollView>
@@ -303,3 +306,4 @@ export default class Search extends React.Component<Props, State> {
     )
   }
 }
+export default withTranslation()(Search as any);

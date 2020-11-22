@@ -7,10 +7,13 @@ import { ScrollView } from 'react-native-gesture-handler';
 import { Space, Location, Booking, Ajax } from '../commons';
 import { Formatting } from '../commons';
 import ModalDialog from './ModalDialog';
+import { withTranslation } from 'react-i18next';
+import { i18n } from 'i18next';
 
 interface Props {
-  navigation: StackNavigationProp<RootStackParamList>;
-  route: RouteProp<RootStackParamList, "SearchResult">;
+  navigation: StackNavigationProp<RootStackParamList>
+  route: RouteProp<RootStackParamList, "SearchResult">
+  i18n: i18n
 }
 
 interface State {
@@ -22,7 +25,7 @@ interface State {
   mapUrl: string
 }
 
-export default class SearchResult extends React.Component<Props, State> {
+class SearchResult extends React.Component<Props, State> {
   data: Space[];
   location: Location | null;
   mapData: string;
@@ -144,20 +147,20 @@ export default class SearchResult extends React.Component<Props, State> {
         :
         <ScrollView>
           <ModalDialog visible={this.state.showConfirm}>
-            <Text style={Styles.text}>Platz: {this.state.selectedSpace?.name}</Text>
-            <Text style={Styles.text}>Bereich: {this.location?.name}</Text>
-            <Text style={Styles.text}>Beginn: {Formatting.getFormatterShort().format(new Date(this.props.route.params.enter))}</Text>
-            <Text style={Styles.text}>Ende: {Formatting.getFormatterShort().format(new Date(this.props.route.params.leave))}</Text>
+            <Text style={Styles.text}>{this.props.i18n.t("space")}: {this.state.selectedSpace?.name}</Text>
+            <Text style={Styles.text}>{this.props.i18n.t("area")}: {this.location?.name}</Text>
+            <Text style={Styles.text}>{this.props.i18n.t("enter")}: {Formatting.getFormatterShort().format(new Date(this.props.route.params.enter))}</Text>
+            <Text style={Styles.text}>{this.props.i18n.t("leave")}: {Formatting.getFormatterShort().format(new Date(this.props.route.params.leave))}</Text>
             <View style={style.button}>
-              <Button title="Buchung bestätigen" onPress={() => {this.onConfirmBooking()}} />
+              <Button title={this.props.i18n.t("confirmBooking")} onPress={() => {this.onConfirmBooking()}} />
             </View>
             <View style={style.button}>
-              <Button title="Abbrechen" onPress={() => {this.setState({showConfirm: false})}} />
+              <Button title={this.props.i18n.t("cancel")} onPress={() => {this.setState({showConfirm: false})}} />
             </View>
           </ModalDialog>
           <ModalDialog visible={this.state.showSuccess}>
             <Text style={Styles.successIcon}>&#128077;</Text>
-            <Text style={Styles.text}>Deine Buchung wurde bestätigt!</Text>
+            <Text style={Styles.text}>{this.props.i18n.t("bookingConfirmed")}</Text>
           </ModalDialog>
           <ScrollView horizontal={true}>
             <View style={this.state.style.container}>
@@ -172,3 +175,5 @@ export default class SearchResult extends React.Component<Props, State> {
     )
   }
 }
+
+export default withTranslation()(SearchResult as any);
