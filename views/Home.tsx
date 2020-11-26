@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Text, ActivityIndicator, Image, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, StyleSheet, Text, ActivityIndicator, Image, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Styles, PrimaryTextSize } from '../types/Styles';
 import { TouchableHighlight, TextInput, ScrollView } from 'react-native-gesture-handler';
@@ -277,6 +277,7 @@ class Home extends React.Component<Props, State> {
             <TouchableHighlight style={style.button} onPress={this.submitLoginForm} disabled={!this.canLogin()}>
               <Text style={this.canLogin() ? style.buttonText : style.buttonTextDisabled}>{this.props.i18n.t("getStarted")}</Text>
             </TouchableHighlight>
+            <TouchableOpacity style={Styles.bottomRight} onPress={() => this.props.navigation.navigate("About")}><Text style={Styles.formButtom}>{this.props.i18n.t("about")}</Text></TouchableOpacity>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>

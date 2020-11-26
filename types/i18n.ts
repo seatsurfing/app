@@ -54,7 +54,17 @@ const resources = {
             "ok": "OK",
             "confirmBooking": "Buchung bestätigen",
             "cancel": "Abbrechen",
-            "bookingConfirmed": "Deine Buchung wurde bestätigt!"
+            "bookingConfirmed": "Deine Buchung wurde bestätigt!",
+            "about": "Über...",
+            "providedBy": "Seatsurfing ist ein Angebot von:",
+            "limitedLiability": "haftungsbeschränkt",
+            "germany": "Deutschland",
+            "contact": "Kontakt",
+            "representedByDirector": "Vertreten durch den Geschäftsführer",
+            "registerNumber": "Handelsregistereintrag",
+            "localCourt": "Amtsgericht Wiesbaden",
+            "moreInfo": "Mehr Informationen",
+            "privacy": "Datenschutz"
         }
     },
     en: {
@@ -92,7 +102,17 @@ const resources = {
             "ok": "OK",
             "confirmBooking": "Confirm booking",
             "cancel": "Cancel",
-            "bookingConfirmed": "Your booking has been confirmed!"
+            "bookingConfirmed": "Your booking has been confirmed!",
+            "about": "About...",
+            "providedBy": "Seatsurfing is provided to you by:",
+            "limitedLiability": "limited liability",
+            "germany": "Germany",
+            "contact": "Contact",
+            "representedByDirector": "Represented by the director",
+            "registerNumber": "Commercial Register No.",
+            "localCourt": "Local Court of Wiesbaden (Amtsgericht Wiesbaden)",
+            "moreInfo": "More information",
+            "privacy": "Privacy Policy"
         }
     }
 };

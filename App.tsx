@@ -19,6 +19,7 @@ import Constants from "expo-constants";
 import Storage from './types/Storage';
 import { withTranslation } from 'react-i18next';
 import { i18n } from 'i18next';
+import About from './views/About';
 
 enableScreens();
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -112,6 +113,7 @@ class App extends React.Component<Props, AuthContextData> {
             {!this.state.token ? (
               <>
                 <Stack.Screen name="Home" component={Home} options={{headerShown: false}} />
+                <Stack.Screen name="About" component={About} options={{title: this.props.i18n.t("about")}} />
               </>
             ) : (
               <>
@@ -119,6 +121,7 @@ class App extends React.Component<Props, AuthContextData> {
                 <Stack.Screen name="SelectLocation" component={SelectLocation} options={{title: this.props.i18n.t("area")}} />
                 <Stack.Screen name="SearchResult" component={SearchResult} options={{title: this.props.i18n.t("selectSpace")}} />
                 <Stack.Screen name="MyBookings" component={MyBookings} options={{title: this.props.i18n.t("myBookings")}} />
+                <Stack.Screen name="About" component={About} options={{title: this.props.i18n.t("about")}} />
               </>
             )}
           </Stack.Navigator>

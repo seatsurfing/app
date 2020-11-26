@@ -5,4 +5,5 @@ type RootStackParamList = {
     SelectLocation: undefined;
     SearchResult: {enter: number, leave: number, locationId: string};
     MyBookings: undefined;
+    About: undefined;
 };

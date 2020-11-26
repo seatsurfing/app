@@ -300,6 +300,10 @@ class Search extends React.Component<Props, State> {
             <View style={Styles.tableRow}>
               <TouchableOpacity onPress={() => this.logout()}><Text style={Styles.formButtomWarning}>{this.props.i18n.t("signout")}</Text></TouchableOpacity>
             </View>
+            <View style={Styles.horizontalLine}></View>
+            <View style={Styles.tableRow}>
+              <TouchableOpacity onPress={() => this.props.navigation.navigate("About")}><Text style={Styles.formButtom}>{this.props.i18n.t("about")}</Text></TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
       </SafeAreaView>

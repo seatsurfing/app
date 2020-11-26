@@ -13,11 +13,16 @@ export const Styles = StyleSheet.create({
       backgroundColor: ColorBlue,
       flex: 1
     },
+    bottomRight: {
+      position: "absolute",
+      bottom: 0
+    },
     containerCenter: {
       flex: 1,
       backgroundColor: '#fff',
       alignItems: 'center',
       justifyContent: 'center',
+      padding: 25
     },
     text: {
       fontSize: PrimaryTextSize,
