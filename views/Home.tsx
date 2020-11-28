@@ -202,6 +202,9 @@ class Home extends React.Component<Props, State> {
         marginBottom: 25,
         width: 300,
         height: (223 / 1024) * 300
+      },
+      linkBottom: {
+        marginTop: 25
       }
     });
 
@@ -267,9 +270,10 @@ class Home extends React.Component<Props, State> {
       invalidText = <Text style={style.invalidText}>{this.props.i18n.t("errorLogin")}</Text>;
     }
     return (
-      <SafeAreaView style={Styles.containerCenter}>
-        <KeyboardAvoidingView contentContainerStyle={Styles.containerCenter} behavior={Platform.OS == "ios" ? "padding" : "height"}>
-          <ScrollView contentContainerStyle={Styles.containerCenter}>
+      <SafeAreaView style={Styles.container}>
+        <KeyboardAvoidingView style={Styles.container} behavior={Platform.OS == "ios" ? "padding" : "height"}>
+          <ScrollView contentContainerStyle={Styles.scrollViewCenter}>
+            <View style={Styles.growMax}></View>
             <Image source={require("../assets/logo.png")} style={style.logo} />
             <Text style={style.claim}>{this.props.i18n.t("findYourPlace")}</Text>
             {invalidText}
@@ -277,7 +281,8 @@ class Home extends React.Component<Props, State> {
             <TouchableHighlight style={style.button} onPress={this.submitLoginForm} disabled={!this.canLogin()}>
               <Text style={this.canLogin() ? style.buttonText : style.buttonTextDisabled}>{this.props.i18n.t("getStarted")}</Text>
             </TouchableHighlight>
-            <TouchableOpacity style={Styles.bottomRight} onPress={() => this.props.navigation.navigate("About")}><Text style={Styles.formButtom}>{this.props.i18n.t("about")}</Text></TouchableOpacity>
+            <View style={Styles.growMax}></View>
+            <TouchableOpacity style={style.linkBottom} onPress={() => this.props.navigation.navigate("About")}><Text style={Styles.formButtom}>{this.props.i18n.t("about")}</Text></TouchableOpacity>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>

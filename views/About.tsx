@@ -24,8 +24,8 @@ class About extends React.Component<Props, State> {
 
   render = () => {
     return(
-      <SafeAreaView style={Styles.containerCenter}>
-        <ScrollView contentContainerStyle={Styles.containerCenter}>
+      <SafeAreaView style={Styles.container}>
+        <ScrollView contentContainerStyle={Styles.scrollViewCenter}>
           <Text style={Styles.text}>{this.props.i18n.t("providedBy")}</Text>
           <Text style={Styles.text}></Text>
           <Text style={Styles.text}>weweave UG ({this.props.i18n.t("limitedLiability")})</Text>
