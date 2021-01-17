@@ -260,7 +260,7 @@ class Search extends React.Component<Props, State> {
               <Text style={Styles.textTableValue} onPress={() => this.startEnterPicking()}>{Formatting.getFormatter().format(this.state.enter)}</Text>
             </View>
             {this.state.showEnterPicker && (
-              <DateTimePicker onChange={this.setEnterDate} value={this.state.enter} mode={this.state.enterMode} style={{ width: '100%' }} />
+              <DateTimePicker onChange={this.setEnterDate} value={this.state.enter} display="spinner" mode={this.state.enterMode} style={{ width: '100%' }} />
             )}
             <View style={Styles.horizontalLine}></View>
             <View style={Styles.tableRow}>
@@ -268,7 +268,7 @@ class Search extends React.Component<Props, State> {
               <Text style={Styles.textTableValue} onPress={() => this.startLeavePicking()}>{Formatting.getFormatter().format(this.state.leave)}</Text>
             </View>
             {this.state.showLeavePicker && (
-              <DateTimePicker onChange={this.setLeaveDate} value={this.state.leave} mode={this.state.leaveMode} style={{ width: '100%' }} />
+              <DateTimePicker onChange={this.setLeaveDate} value={this.state.leave} display="spinner" mode={this.state.leaveMode} style={{ width: '100%' }} />
             )}
             <View style={Styles.horizontalLine}></View>
             <View style={Styles.tableRow}>
