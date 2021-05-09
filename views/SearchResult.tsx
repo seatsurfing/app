@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, SafeAreaView, ImageBackground, StyleSheet, View, ActivityIndicator, TouchableOpacity, Modal, Button } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Styles, PrimaryTextSize } from '../types/Styles';
+import { Styles, PrimaryTextSize, CaptionTextSize } from '../types/Styles';
 import { RouteProp } from '@react-navigation/native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { Space, Location, Booking, Ajax } from '../commons';
@@ -117,18 +117,29 @@ class SearchResult extends React.Component<Props, State> {
         top: item.y,
         width: item.width,
         height: item.height,
-        transform: [{rotate: item.rotation + "deg"}]
+        transform: [{rotate: item.rotation + "deg"}],
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center"
       },
       text: {
-        position: "absolute",
-        marginTop: 5,
-        alignSelf: "center",
-        fontSize: PrimaryTextSize
+        width: item.width,
+        textAlign: "center",
+        fontSize: CaptionTextSize,
+        color: "#fff",
+        transform: [{ rotate: "0deg" }]
       }
     });
+    if (item.width < item.height) {
+      style.text = {
+        ...style.text,
+        width: item.height,
+        transform: [{ rotate: "90deg" }],
+      };
+    }
     return(
       <TouchableOpacity key={item.id} style={style.box} onPress={() => this.onSpaceSelect(item)}>
-        <Text style={style.text}>{item.name}</Text>
+        <Text style={style.text} numberOfLines={1}>{item.name}</Text>
       </TouchableOpacity>
     );
   }
