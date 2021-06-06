@@ -83,26 +83,45 @@ class Search extends React.Component<Props, State> {
     if (now.getHours() > 17) {
       let enter = new Date();
       enter.setDate(enter.getDate() + 1);
-      enter.setHours(9, 0, 0);
-      let leave = new Date(enter);
-      leave.setHours(17, 0, 0);
-      this.setState({
-        enter: enter,
-        leave: leave
-      });
-    } else {
-      let enter = new Date();
-      enter.setHours(enter.getHours() + 1, 0, 0);
-      let leave = new Date(enter);
-      if (leave.getHours() < 17) {
-        leave.setHours(17, 0, 0);
+      if (this.context.dailyBasisBooking) {
+        enter.setHours(0, 0, 0);
       } else {
-        leave.setHours(leave.getHours() + 1, 0, 0);
+        enter.setHours(9, 0, 0);
+      }
+      let leave = new Date(enter);
+      if (this.context.dailyBasisBooking) {
+        leave.setHours(23, 59, 59);
+      } else {
+        leave.setHours(17, 0, 0);
       }
       this.setState({
         enter: enter,
         leave: leave
       });
+    } else {
+      if (this.context.dailyBasisBooking) {
+        let enter = new Date();
+        enter.setHours(0, 0, 0);
+        let leave = new Date(enter);
+        leave.setHours(23, 59, 59);
+        this.setState({
+          enter: enter,
+          leave: leave
+        });
+      } else {
+        let enter = new Date();
+        enter.setHours(enter.getHours() + 1, 0, 0);
+        let leave = new Date(enter);
+        if (leave.getHours() < 17) {
+          leave.setHours(17, 0, 0);
+        } else {
+          leave.setHours(leave.getHours() + 1, 0, 0);
+        }
+        this.setState({
+          enter: enter,
+          leave: leave
+        });
+      }
     }
   }
 
@@ -140,7 +159,7 @@ class Search extends React.Component<Props, State> {
       this.setState({ showEnterPicker: false });
     } else {
       this.setState({
-        enterMode: Platform.OS === "ios" ? "datetime" : "date",
+        enterMode: (Platform.OS === "ios" && !this.context.dailyBasisBooking) ? "datetime" : "date",
         showEnterPicker: true
       });
     }
@@ -151,7 +170,7 @@ class Search extends React.Component<Props, State> {
       this.setState({ showLeavePicker: false });
     } else {
       this.setState({
-        leaveMode: Platform.OS === "ios" ? "datetime" : "date",
+        leaveMode: (Platform.OS === "ios" && !this.context.dailyBasisBooking) ? "datetime" : "date",
         showLeavePicker: true
       });
     }
@@ -162,6 +181,14 @@ class Search extends React.Component<Props, State> {
     if (this.state.enterMode === "datetime") {
       this.setState({ enter: newDate }, () => this.updateCanSearch());
     } else if (this.state.enterMode === "date") {
+      if (this.context.dailyBasisBooking) {
+        selectedDate?.setHours(0, 0, 0);
+        this.setState({
+          enter: newDate,
+          showEnterPicker: false
+        }, () => this.updateCanSearch());
+        return;
+      }
       this.setState({
         enter: newDate,
         enterMode: "time"
@@ -179,6 +206,14 @@ class Search extends React.Component<Props, State> {
     if (this.state.leaveMode === "datetime") {
       this.setState({ leave: newDate }, () => this.updateCanSearch());
     } else if (this.state.leaveMode === "date") {
+      if (this.context.dailyBasisBooking) {
+        selectedDate?.setHours(23, 59, 59);
+        this.setState({
+          leave: newDate,
+          showLeavePicker: false
+        }, () => this.updateCanSearch());
+        return;
+      }
       this.setState({
         leave: newDate,
         leaveMode: "time"
@@ -215,7 +250,11 @@ class Search extends React.Component<Props, State> {
       hint = this.props.i18n.t("errorPickArea");
     }
     let now = new Date();
-    if (this.state.enter.getTime() <= now.getTime()) {
+    let enterTime = new Date(this.state.enter);
+    if (this.context.dailyBasisBooking) {
+      enterTime.setHours(23, 59, 59);
+    }
+    if (enterTime.getTime() <= now.getTime()) {
       res = false;
       hint = this.props.i18n.t("errorEnterFuture");
     }
@@ -247,6 +286,13 @@ class Search extends React.Component<Props, State> {
     this.context.setDetails("", "");
   }
 
+  formatDateTime = (date: Date) => {
+    if (this.context.dailyBasisBooking) {
+      return Formatting.getFormatterNoTime().format(date);
+    }
+    return Formatting.getFormatter().format(date);
+  }
+
   render = () => {
     return (
       <SafeAreaView style={Styles.container}>
@@ -257,7 +303,7 @@ class Search extends React.Component<Props, State> {
           <View style={Styles.section}>
             <View style={Styles.tableRow}>
               <Text style={Styles.text}>{this.props.i18n.t("enter")}</Text>
-              <Text style={Styles.textTableValue} onPress={() => this.startEnterPicking()}>{Formatting.getFormatter().format(this.state.enter)}</Text>
+              <Text style={Styles.textTableValue} onPress={() => this.startEnterPicking()}>{this.formatDateTime(this.state.enter)}</Text>
             </View>
             {this.state.showEnterPicker && (
               <DateTimePicker onChange={this.setEnterDate} value={this.state.enter} display="spinner" mode={this.state.enterMode} style={{ width: '100%' }} />
@@ -265,7 +311,7 @@ class Search extends React.Component<Props, State> {
             <View style={Styles.horizontalLine}></View>
             <View style={Styles.tableRow}>
               <Text style={Styles.text}>{this.props.i18n.t("leave")}</Text>
-              <Text style={Styles.textTableValue} onPress={() => this.startLeavePicking()}>{Formatting.getFormatter().format(this.state.leave)}</Text>
+              <Text style={Styles.textTableValue} onPress={() => this.startLeavePicking()}>{this.formatDateTime(this.state.leave)}</Text>
             </View>
             {this.state.showLeavePicker && (
               <DateTimePicker onChange={this.setLeaveDate} value={this.state.leave} display="spinner" mode={this.state.leaveMode} style={{ width: '100%' }} />
