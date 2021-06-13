@@ -33,6 +33,10 @@ export const Styles = StyleSheet.create({
     text: {
       fontSize: PrimaryTextSize,
     },
+    textWithTopMargin: {
+      fontSize: PrimaryTextSize,
+      marginTop: 10,
+    },
     header: {
       backgroundColor: ColorBlue,
       height: 75,

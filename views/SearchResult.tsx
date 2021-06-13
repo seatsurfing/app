@@ -21,6 +21,7 @@ interface State {
   loading: boolean
   showConfirm: boolean
   showSuccess: boolean
+  showBookingNames: boolean
   selectedSpace: Space | null
   mapUrl: string
 }
@@ -39,6 +40,7 @@ class SearchResult extends React.Component<Props, State> {
       loading: true,
       showConfirm: false,
       showSuccess: false,
+      showBookingNames: false,
       selectedSpace: null,
       mapUrl: "",
       style: StyleSheet.create({
@@ -81,6 +83,11 @@ class SearchResult extends React.Component<Props, State> {
       this.setState({
         selectedSpace: item,
         showConfirm: true
+      });
+    } else if (!item.available && item.bookings && item.bookings.length > 0) {
+      this.setState({
+        showBookingNames: true,
+        selectedSpace: item
       });
     }
   }
@@ -144,6 +151,19 @@ class SearchResult extends React.Component<Props, State> {
     );
   }
 
+  renderBookingNameRow = (booking: Booking) => {
+    return (
+      <View key={booking.user.id}>
+        <Text style={Styles.textWithTopMargin}>{booking.user.email}</Text>
+        <Text style={Styles.text}>
+          {Formatting.getFormatterShort().format(new Date(booking.enter))}
+          &nbsp;&mdash;&nbsp;
+          {Formatting.getFormatterShort().format(new Date(booking.leave))}
+        </Text>
+      </View>
+    );
+  }
+
   render = () => {
     const style = StyleSheet.create({
       button: {
@@ -157,6 +177,13 @@ class SearchResult extends React.Component<Props, State> {
           <ActivityIndicator size="large" style={Styles.activityIndicator} />
         :
         <ScrollView>
+          <ModalDialog visible={this.state.showBookingNames}>
+            <Text style={Styles.subject}>{this.state.selectedSpace?.name}</Text>
+            {this.state.selectedSpace?.bookings.map(booking => this.renderBookingNameRow(booking))}
+            <View style={style.button}>
+              <Button title={this.props.i18n.t("ok")} onPress={() => {this.setState({showBookingNames: false})}} />
+            </View>
+          </ModalDialog>
           <ModalDialog visible={this.state.showConfirm}>
             <Text style={Styles.text}>{this.props.i18n.t("space")}: {this.state.selectedSpace?.name}</Text>
             <Text style={Styles.text}>{this.props.i18n.t("area")}: {this.location?.name}</Text>
