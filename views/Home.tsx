@@ -49,7 +49,7 @@ class Home extends React.Component<Props, State> {
   initUrl = () => {
     let now = new Date();
     let eol = new Date(2021, 6, 31, 23, 59, 59);
-    if ((now.getTime() <= eol.getTime())) {
+    if ((now.getTime() <= eol.getTime()) && this.state.url === "https://") {
       this.state = {
         ...this.state,
         url: "https://app.seatsurfing.de",
