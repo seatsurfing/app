@@ -10,6 +10,7 @@ import Storage from '../types/Storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { withTranslation } from 'react-i18next';
 import { i18n } from 'i18next';
+import Constants from 'expo-constants';
 
 interface Props {
   navigation: StackNavigationProp<RootStackParamList>
@@ -17,6 +18,7 @@ interface Props {
 }
 
 interface State {
+  url: string
   email: string
   password: string
   requirePassword: boolean
@@ -33,6 +35,7 @@ class Home extends React.Component<Props, State> {
     super(props);
     this.org = null;
     this.state = {
+      url: (Ajax.URL ? Ajax.URL : "https://"),
       requirePassword: false,
       password: "",
       email: "",
@@ -40,6 +43,26 @@ class Home extends React.Component<Props, State> {
       invalid: false,
       loading: false
     };
+    this.initUrl();
+  }
+
+  initUrl = () => {
+    let now = new Date();
+    let eol = new Date(2021, 6, 31, 23, 59, 59);
+    if ((now.getTime() <= eol.getTime())) {
+      this.state = {
+        ...this.state,
+        url: "https://app.seatsurfing.de",
+      };
+      return;
+    }
+    let devMode = (Constants.appOwnership === "expo");
+    if (devMode && Constants.manifest && Constants.manifest.debuggerHost) {
+      this.state = {
+        ...this.state,
+        url: "http://" + Constants.manifest.debuggerHost.split(':').shift() + ":8090",
+      };
+    }
   }
 
   finishJwtSetup = (jwt: string, email: string) => {
@@ -75,7 +98,7 @@ class Home extends React.Component<Props, State> {
     });
   }
 
-  onPasswordSubmit = (e: any) => {
+  onPasswordSubmit = () => {
     this.setState({
       loading: true,
       invalid: false
@@ -103,10 +126,12 @@ class Home extends React.Component<Props, State> {
       loading: true,
       invalid: false
     });
+    Ajax.URL = this.state.url;
     let payload = {
       email: this.state.email.trim().toLowerCase()
     };
     Ajax.postData("/auth/preflight", payload).then((res) => {
+      Storage.setURL(this.state.url);
       this.org = new Organization();
       this.org.deserialize(res.json.organization);
       this.setState({
@@ -123,7 +148,11 @@ class Home extends React.Component<Props, State> {
   }
 
   canLogin = () => {
-    if (this.state.email && this.state.email.indexOf("@") >= 1 && this.state.email.length >= 6 && this.state.email.split("@").length == 2) {
+    if ((this.state.url.indexOf("http://") === 0 || this.state.url.indexOf("https://") === 0) &&
+        this.state.email &&
+        this.state.email.indexOf("@") >= 1 &&
+        this.state.email.length >= 6 &&
+        this.state.email.split("@").length == 2) {
       return true;
     }
     return false;
@@ -277,6 +306,7 @@ class Home extends React.Component<Props, State> {
             <Image source={require("../assets/logo.png")} style={style.logo} />
             <Text style={style.claim}>{this.props.i18n.t("findYourPlace")}</Text>
             {invalidText}
+            <TextInput style={style.textInput} value={this.state.url} onChangeText={text => this.setState({ url: text })} placeholder={this.props.i18n.t("urlPlaceholder")} keyboardType="url" />
             <TextInput style={style.textInput} value={this.state.email} onChangeText={text => this.setState({ email: text })} placeholder={this.props.i18n.t("emailPlaceholder")} keyboardType="email-address" />
             <TouchableHighlight style={style.button} onPress={this.submitLoginForm} disabled={!this.canLogin()}>
               <Text style={this.canLogin() ? style.buttonText : style.buttonTextDisabled}>{this.props.i18n.t("getStarted")}</Text>

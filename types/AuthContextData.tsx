@@ -2,6 +2,7 @@ import React from 'react';
 
 export interface AuthContextData {
     token: string;
+    url: string;
     username: string;
     isLoading: boolean;
     maxBookingsPerUser: number;
@@ -14,6 +15,7 @@ export interface AuthContextData {
 
 export const AuthContext = React.createContext<AuthContextData>({
     token: "", 
+    url: "",
     username: "", 
     isLoading: true, 
     maxBookingsPerUser: 0,

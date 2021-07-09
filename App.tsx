@@ -38,6 +38,7 @@ class App extends React.Component<Props, AuthContextData> {
     super(props);
     this.state = {
       token: "",
+      url: "",
       username: "",
       isLoading: true,
       maxBookingsPerUser: 0,
@@ -47,10 +48,6 @@ class App extends React.Component<Props, AuthContextData> {
       showNames: false,
       setDetails: this.setDetails
     };
-    Ajax.DEV_MODE = (Constants.appOwnership === "expo");
-    if (Ajax.DEV_MODE && Constants.manifest.debuggerHost) {
-      Ajax.DEV_URL = "http://" + Constants.manifest.debuggerHost.split(':').shift() + ":8090";
-    }
     setTimeout(() => {
       this.verifyToken();
     }, 10);
@@ -74,8 +71,12 @@ class App extends React.Component<Props, AuthContextData> {
   }
 
   verifyToken = async () => {
+    let url = await Storage.getURL();
+    if (url != null && url !== "") {
+      Ajax.URL = url;
+    }
     let token = await Storage.getJWT();
-    if (token != null) {
+    if (Ajax.URL && token != null) {
       Ajax.JWT = token;
       User.getSelf().then(user => {
         this.loadSettings().then(() => {
