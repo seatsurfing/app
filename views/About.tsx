@@ -28,7 +28,7 @@ class About extends React.Component<Props, State> {
         <ScrollView contentContainerStyle={Styles.scrollViewCenter}>
           <Text style={Styles.text}>{this.props.i18n.t("providedBy")}</Text>
           <Text style={Styles.text}></Text>
-          <Text style={Styles.text}>Heinrich Peuser</Text>
+          <Text style={Styles.text}>Heinrich Beck</Text>
           <Text style={Styles.text}>Wilhelm-Busch-Str. 59</Text>
           <Text style={Styles.text}>60431 Frankfurt</Text>
           <Text style={Styles.text}>{this.props.i18n.t("germany")}</Text>
