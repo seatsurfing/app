@@ -79,6 +79,7 @@ class Search extends React.Component<Props, State> {
   }
 
   initDates = () => {
+    console.log("initializating date selectors...");
     let now = new Date();
     if (now.getHours() > 17) {
       let enter = new Date();

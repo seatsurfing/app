@@ -90,6 +90,9 @@ class Home extends React.Component<Props, State> {
   }
 
   onPasswordSubmit = () => {
+    if (!this.canPasswordLogin()) {
+      return;
+    }
     this.setState({
       loading: true,
       invalid: false
@@ -109,6 +112,9 @@ class Home extends React.Component<Props, State> {
   }
 
   submitLoginForm = () => {
+    if (!this.canLogin()) {
+      return;
+    }
     let email = this.state.email.split("@");
     if (email.length !== 2) {
       return;
@@ -247,7 +253,7 @@ class Home extends React.Component<Props, State> {
             <ScrollView contentContainerStyle={Styles.containerCenter}>
               <Text style={style.claim}>{this.props.i18n.t("signinAsAt", {"user": this.state.email.toLowerCase(), "org": this.org?.name})}</Text>
               {invalidText}
-              <TextInput style={style.textInput} value={this.state.password} onChangeText={text => this.setState({ password: text })} placeholder={this.props.i18n.t("password")} secureTextEntry={true} autoFocus={true} />
+              <TextInput style={style.textInput} value={this.state.password} onChangeText={text => this.setState({ password: text })} placeholder={this.props.i18n.t("password")} secureTextEntry={true} autoFocus={true} onSubmitEditing={this.onPasswordSubmit} />
               <View>
                 <TouchableHighlight style={style.button} onPress={this.onPasswordSubmit} disabled={!this.canPasswordLogin()}>
                   <Text style={this.canPasswordLogin() ? style.buttonText : style.buttonTextDisabled}>{this.props.i18n.t("signin")}</Text>
@@ -298,7 +304,7 @@ class Home extends React.Component<Props, State> {
             <Text style={style.claim}>{this.props.i18n.t("findYourPlace")}</Text>
             {invalidText}
             <TextInput style={style.textInput} value={this.state.url} onChangeText={text => this.setState({ url: text })} placeholder={this.props.i18n.t("urlPlaceholder")} keyboardType="url" />
-            <TextInput style={style.textInput} value={this.state.email} onChangeText={text => this.setState({ email: text })} placeholder={this.props.i18n.t("emailPlaceholder")} keyboardType="email-address" />
+            <TextInput style={style.textInput} value={this.state.email} onChangeText={text => this.setState({ email: text })} placeholder={this.props.i18n.t("emailPlaceholder")} keyboardType="email-address" onSubmitEditing={this.submitLoginForm} />
             <TouchableHighlight style={style.button} onPress={this.submitLoginForm} disabled={!this.canLogin()}>
               <Text style={this.canLogin() ? style.buttonText : style.buttonTextDisabled}>{this.props.i18n.t("getStarted")}</Text>
             </TouchableHighlight>

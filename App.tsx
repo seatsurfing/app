@@ -54,7 +54,8 @@ class App extends React.Component<Props, AuthContextData> {
   }
 
   loadSettings = async () => {
-    OrgSettings.list().then(settings => {
+    console.log("loading settings...");
+    return OrgSettings.list().then(settings => {
       let state: any = {};
       settings.forEach(s => {
         if (s.name === "max_bookings_per_user") state.maxBookingsPerUser = window.parseInt(s.value);
@@ -67,6 +68,7 @@ class App extends React.Component<Props, AuthContextData> {
         ...this.state,
         ...state
       });
+      console.log("settings loaded");
     });
   }
 
