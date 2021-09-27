@@ -1,22 +1,7 @@
 import i18n from 'i18next';
-//import { LanguageDetectorAsyncModule, InitOptions, Services } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import * as Localization from 'expo-localization';
 
-/*
-console.log("test 1");
-class LanguageDetector implements LanguageDetectorAsyncModule {
-    type: 'languageDetector' = 'languageDetector';
-    async: true = true;
-    detect = (callback: any) => {
-        console.log("----> " + Localization.locale.split('-')[0]);
-        callback("en");
-    };
-    init = (services: Services, detectorOptions: object, i18nextOptions: InitOptions) => {};
-    cacheUserLanguage = (lng: string) => {};
-}
-const languageDetector = new LanguageDetector();
-*/
 const deviceLanguage = Localization.locale.split('-')[0];
 const resources = {
     de: {
@@ -50,6 +35,8 @@ const resources = {
             "errorLeaveAfterEnter": "Das Ende muss nach dem Beginn liegen.",
             "errorDaysAdvance": "Die Buchung darf maximal {{num}} Tage in der Zukunft liegen.",
             "errorBookingDuration": "Die maximale Buchungsdauer beträgt {{num}} Stunden.",
+            "errorTooManyConcurrent": "Kapazitätsgrenze des gewählten Bereichs ist erreicht.",
+            "errorUnknown": "Unbekannter Fehler, bitte versuche es später erneut.",
             "searchSpace": "Plätze suchen",
             "cancelBooking": "Stornieren",
             "ok": "OK",
@@ -99,6 +86,8 @@ const resources = {
             "errorLeaveAfterEnter": "Leave date must be after enter date.",
             "errorDaysAdvance": "Your booking must not be more than {{num}} days in advance.",
             "errorBookingDuration": "The maximum booking duration is {{num}} hours.",
+            "errorTooManyConcurrent": "Capacity limit reached in selected area.",
+            "errorUnknown": "Unknown error, please try again later.",
             "searchSpace": "Find a space",
             "cancelBooking": "Cancel",
             "ok": "OK",

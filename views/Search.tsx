@@ -3,12 +3,13 @@ import { Text, View, Platform, SafeAreaView, TouchableOpacity, ScrollView } from
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Styles } from '../types/Styles';
 import DateTimePicker, { Event } from '@react-native-community/datetimepicker';
-import { Formatting, Location, Booking } from '../commons';
+import { Formatting, Location, Booking, Ajax, AjaxError } from '../commons';
 import { RouteProp } from '@react-navigation/native';
 import { AuthContext } from '../types/AuthContextData';
 import Storage from '../types/Storage';
 import { withTranslation } from 'react-i18next';
 import { i18n } from 'i18next';
+import ErrorText from '../types/ErrorText';
 
 interface Props {
   navigation: StackNavigationProp<RootStackParamList>
@@ -294,6 +295,25 @@ class Search extends React.Component<Props, State> {
     return Formatting.getFormatter().format(date);
   }
 
+  onSearchClick = () => {
+    this.setState({canSearch: false, canSearchHint: ""});
+    let payload = {
+      "locationId": this.state.locationId,
+      "enter": this.state.enter.toISOString(),
+      "leave": this.state.leave.toISOString(),
+    };
+    Ajax.postData("/booking/precheck/", payload).then(res => {
+      this.setState({ canSearch: true });
+      this.props.navigation.navigate("SearchResult", { enter: this.state.enter.getTime(), leave: this.state.leave.getTime(), locationId: this.getSelectedLocationId() })
+    }).catch(e => {
+      let code: number = 0;
+      if (e instanceof AjaxError) {
+        code = e.appErrorCode;
+      }
+      this.setState({ canSearch: false, canSearchHint: ErrorText.getTextForAppCode(code, this.props.i18n, this.context) });
+    });
+  }
+
   render = () => {
     return (
       <SafeAreaView style={Styles.container}>
@@ -324,7 +344,7 @@ class Search extends React.Component<Props, State> {
             </View>
             <View style={Styles.horizontalLine}></View>
             <View style={Styles.tableRow}>
-              <TouchableOpacity disabled={!this.state.canSearch} onPress={() => this.props.navigation.navigate("SearchResult", { enter: this.state.enter.getTime(), leave: this.state.leave.getTime(), locationId: this.getSelectedLocationId() })}><Text style={this.state.canSearch ? Styles.formButtom : Styles.formButtomDisabled}>{this.state.canSearch ? this.props.i18n.t("searchSpace") : this.state.canSearchHint}</Text></TouchableOpacity>
+              <TouchableOpacity disabled={!this.state.canSearch} onPress={this.onSearchClick}><Text style={this.state.canSearch ? Styles.formButtom : Styles.formButtomDisabled}>{(this.state.canSearch || !this.state.canSearchHint) ? this.props.i18n.t("searchSpace") : this.state.canSearchHint}</Text></TouchableOpacity>
             </View>
           </View>
           <View>

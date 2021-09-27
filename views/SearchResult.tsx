@@ -4,11 +4,12 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { Styles, PrimaryTextSize, CaptionTextSize } from '../types/Styles';
 import { RouteProp } from '@react-navigation/native';
 import { ScrollView } from 'react-native-gesture-handler';
-import { Space, Location, Booking, Ajax } from '../commons';
+import { Space, Location, Booking, Ajax, AjaxError } from '../commons';
 import { Formatting } from '../commons';
 import ModalDialog from './ModalDialog';
 import { withTranslation } from 'react-i18next';
 import { i18n } from 'i18next';
+import ErrorText from '../types/ErrorText';
 
 interface Props {
   navigation: StackNavigationProp<RootStackParamList>
@@ -21,6 +22,8 @@ interface State {
   loading: boolean
   showConfirm: boolean
   showSuccess: boolean
+  showError: boolean
+  errorText: string
   showBookingNames: boolean
   selectedSpace: Space | null
   mapUrl: string
@@ -40,6 +43,8 @@ class SearchResult extends React.Component<Props, State> {
       loading: true,
       showConfirm: false,
       showSuccess: false,
+      showError: false,
+      errorText: "",
       showBookingNames: false,
       selectedSpace: null,
       mapUrl: "",
@@ -108,6 +113,19 @@ class SearchResult extends React.Component<Props, State> {
       this.setState({
         loading: false,
         showSuccess: true
+      });
+      setTimeout(() => {
+        this.props.navigation.goBack();
+      }, 5000);
+    }).catch(e => {
+      let code: number = 0;
+      if (e instanceof AjaxError) {
+        code = e.appErrorCode;
+      }
+      this.setState({ 
+        loading: false,
+        showError: true, 
+        errorText: ErrorText.getTextForAppCode(code, this.props.i18n, this.context) 
       });
       setTimeout(() => {
         this.props.navigation.goBack();
@@ -199,6 +217,10 @@ class SearchResult extends React.Component<Props, State> {
           <ModalDialog visible={this.state.showSuccess}>
             <Text style={Styles.successIcon}>&#128077;</Text>
             <Text style={Styles.text}>{this.props.i18n.t("bookingConfirmed")}</Text>
+          </ModalDialog>
+          <ModalDialog visible={this.state.showError}>
+            <Text style={Styles.successIcon}>&#129320;</Text>
+            <Text style={Styles.text}>{this.state.errorText}</Text>
           </ModalDialog>
           <ScrollView horizontal={true}>
             <View style={this.state.style.container}>
