@@ -52,7 +52,8 @@ const resources = {
             "registerNumber": "Handelsregistereintrag",
             "localCourt": "Amtsgericht Wiesbaden",
             "moreInfo": "Mehr Informationen",
-            "privacy": "Datenschutz"
+            "privacy": "Datenschutz",
+            "timezone": "Zeitzone",
         }
     },
     en: {
@@ -103,7 +104,8 @@ const resources = {
             "registerNumber": "Commercial Register No.",
             "localCourt": "Local Court of Wiesbaden (Amtsgericht Wiesbaden)",
             "moreInfo": "More information",
-            "privacy": "Privacy Policy"
+            "privacy": "Privacy Policy",
+            "timezone": "Time zone",
         }
     }
 };

@@ -10,6 +10,7 @@ import ModalDialog from './ModalDialog';
 import { withTranslation } from 'react-i18next';
 import { i18n } from 'i18next';
 import ErrorText from '../types/ErrorText';
+import { AuthContext } from '../types/AuthContextData';
 
 interface Props {
   navigation: StackNavigationProp<RootStackParamList>
@@ -30,6 +31,7 @@ interface State {
 }
 
 class SearchResult extends React.Component<Props, State> {
+  static contextType = AuthContext;
   data: Space[];
   location: Location | null;
   mapData: string;
@@ -182,6 +184,13 @@ class SearchResult extends React.Component<Props, State> {
     );
   }
 
+  getActualTimezone = (): string => {
+    if (this.location && this.location.timezone) {
+      return this.location.timezone;
+    }
+    return this.context.defaultTimezone;
+  }
+
   render = () => {
     const style = StyleSheet.create({
       button: {
@@ -207,6 +216,7 @@ class SearchResult extends React.Component<Props, State> {
             <Text style={Styles.text}>{this.props.i18n.t("area")}: {this.location?.name}</Text>
             <Text style={Styles.text}>{this.props.i18n.t("enter")}: {Formatting.getFormatterShort().format(new Date(this.props.route.params.enter))}</Text>
             <Text style={Styles.text}>{this.props.i18n.t("leave")}: {Formatting.getFormatterShort().format(new Date(this.props.route.params.leave))}</Text>
+            <Text style={Styles.text}>{this.props.i18n.t("timezone")}: {this.getActualTimezone()}</Text>
             <View style={style.button}>
               <Button title={this.props.i18n.t("confirmBooking")} onPress={() => {this.onConfirmBooking()}} />
             </View>
