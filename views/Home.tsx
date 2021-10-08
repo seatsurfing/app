@@ -119,16 +119,21 @@ class Home extends React.Component<Props, State> {
     if (email.length !== 2) {
       return;
     }
+    let url = this.state.url;
+    if (!(url.toLowerCase().startsWith("https://") || url.toLowerCase().startsWith("http://"))) {
+      url = "https://" + url;
+    }
     this.setState({
       loading: true,
-      invalid: false
+      invalid: false,
+      url: url
     });
-    Ajax.URL = this.state.url;
+    Ajax.URL = url;
     let payload = {
       email: this.state.email.trim().toLowerCase()
     };
     Ajax.postData("/auth/preflight", payload).then((res) => {
-      Storage.setURL(this.state.url);
+      Storage.setURL(url);
       this.org = new Organization();
       this.org.deserialize(res.json.organization);
       this.setState({
@@ -145,8 +150,7 @@ class Home extends React.Component<Props, State> {
   }
 
   canLogin = () => {
-    if ((this.state.url.indexOf("http://") === 0 || this.state.url.indexOf("https://") === 0) &&
-        this.state.email &&
+    if (this.state.email &&
         this.state.email.indexOf("@") >= 1 &&
         this.state.email.length >= 6 &&
         this.state.email.split("@").length == 2) {
