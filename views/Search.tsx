@@ -179,25 +179,35 @@ class Search extends React.Component<Props, State> {
   }
 
   setEnterDate = (event: Event, selectedDate?: Date) => {
+    let diff = this.state.leave.getTime() - this.state.enter.getTime();
     let newDate = selectedDate || this.state.enter;
+    let leave = new Date();
+    leave.setTime(newDate.getTime() + diff);
     if (this.state.enterMode === "datetime") {
-      this.setState({ enter: newDate }, () => this.updateCanSearch());
+      this.setState({ 
+        enter: newDate,
+        leave: leave
+      }, () => this.updateCanSearch());
     } else if (this.state.enterMode === "date") {
       if (this.context.dailyBasisBooking) {
         selectedDate?.setHours(0, 0, 0);
+        leave.setTime(newDate.getTime() + diff);
         this.setState({
           enter: newDate,
+          leave: leave,
           showEnterPicker: false
         }, () => this.updateCanSearch());
         return;
       }
       this.setState({
         enter: newDate,
+        leave: leave,
         enterMode: "time"
       }, () => this.updateCanSearch());
     } else if (this.state.enterMode === "time") {
       this.setState({
         enter: newDate,
+        leave: leave,
         showEnterPicker: false
       }, () => this.updateCanSearch());
     }
