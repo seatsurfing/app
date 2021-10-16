@@ -309,8 +309,8 @@ class Search extends React.Component<Props, State> {
     this.setState({canSearch: false, canSearchHint: ""});
     let payload = {
       "locationId": this.state.locationId,
-      "enter": this.state.enter.toISOString(),
-      "leave": this.state.leave.toISOString(),
+      "enter": Formatting.convertToFakeUTCDate(this.state.enter).toISOString(),
+      "leave": Formatting.convertToFakeUTCDate(this.state.leave).toISOString(),
     };
     Ajax.postData("/booking/precheck/", payload).then(res => {
       this.setState({ canSearch: true });
