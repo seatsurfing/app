@@ -4,7 +4,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { Styles, PrimaryTextSize } from '../types/Styles';
 import { TouchableHighlight, TextInput, ScrollView } from 'react-native-gesture-handler';
 import * as WebBrowser from 'expo-web-browser';
-import { Ajax, Organization, AuthProvider } from '../commons';
+import { Ajax, Organization, AuthProvider, AjaxCredentials } from '../commons';
 import { AuthContext } from '../types/AuthContextData';
 import Storage from '../types/Storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,6 +25,7 @@ interface State {
   providers: AuthProvider[] | null
   invalid: boolean
   loading: boolean
+  backendVersion: string
 }
 
 class Home extends React.Component<Props, State> {
@@ -41,7 +42,8 @@ class Home extends React.Component<Props, State> {
       email: "",
       providers: null,
       invalid: false,
-      loading: false
+      loading: false,
+      backendVersion: ""
     };
     this.initUrl();
   }
@@ -56,25 +58,50 @@ class Home extends React.Component<Props, State> {
     }
   }
 
-  finishJwtSetup = (jwt: string, email: string) => {
-    Ajax.JWT = jwt;
-    Storage.setJWT(jwt).then(() => {
-      this.setState({ loading: false });
-      this.context.setDetails(jwt, email);
+  finishJwtSetup = (credentials: AjaxCredentials, email: string) => {
+    Ajax.CREDENTIALS = credentials;
+    Ajax.PERSISTER.updateCredentialsSessionStorage(Ajax.CREDENTIALS).then(() => {
+      Ajax.PERSISTER.persistRefreshTokenInLocalStorage(Ajax.CREDENTIALS).then(() => {
+        this.setState({ loading: false });
+        this.context.setDetails(email);
+      });
     });
   }
 
+  getCredentialsFromJson = (json: any): AjaxCredentials => {
+    let credentials: AjaxCredentials;
+    if (json.accessToken) {
+      credentials = {
+        accessToken: json.accessToken,
+        refreshToken: json.refreshToken,
+        accessTokenExpiry: new Date(new Date().getTime() + Ajax.ACCESS_TOKEN_EXPIRY_OFFSET)
+      };
+    } else {
+      credentials = {
+        accessToken: json.jwt,
+        refreshToken: "",
+        accessTokenExpiry: new Date(0)
+      };
+    }
+    return credentials;
+  }
+
   getJwt = (id: string) => {
-    return Ajax.get("/auth/verify/" + id).then(result => {
-      if (result.json && result.json.jwt) {
-        this.finishJwtSetup(result.json.jwt, this.state.email);
+    return Ajax.get("/auth/verify/" + id).then(res => {
+      if (res.json) {
+        let credentials = this.getCredentialsFromJson(res.json);
+        this.finishJwtSetup(credentials, this.state.email);
       }
     });
   }
 
   useProvider = (provider: AuthProvider) => {
     this.setState({ loading: true });
-    WebBrowser.openAuthSessionAsync(Ajax.getBackendUrl() + "/auth/" + provider.id + "/login/app", "").then(result => {
+    let url = Ajax.getBackendUrl() + "/auth/" + provider.id + "/login/app";
+    if (!this.state.backendVersion.startsWith("1.6.")) {
+      url += "/1";
+    }
+    WebBrowser.openAuthSessionAsync(url, "").then(result => {
       if (result.type === "success") {
         let urlParts = result.url.split("/");
         let id = urlParts[urlParts.length - 1];
@@ -99,10 +126,12 @@ class Home extends React.Component<Props, State> {
     });
     let payload = {
       email: this.state.email,
-      password: this.state.password
+      password: this.state.password,
+      longLived: true
     };
     Ajax.postData("/auth/login", payload).then((res) => {
-      this.finishJwtSetup(res.json.jwt, this.state.email);
+      let credentials = this.getCredentialsFromJson(res.json);
+      this.finishJwtSetup(credentials, this.state.email);
     }).catch((e) => {
       this.setState({
         loading: false,
@@ -139,7 +168,8 @@ class Home extends React.Component<Props, State> {
       this.setState({
         loading: false,
         providers: res.json.authProviders,
-        requirePassword: res.json.requirePassword
+        requirePassword: res.json.requirePassword,
+        backendVersion: (res.json.backendVersion ? res.json.backendVersion : "1.6.0")
       });
     }).catch((e) => {
       this.setState({
@@ -151,9 +181,9 @@ class Home extends React.Component<Props, State> {
 
   canLogin = () => {
     if (this.state.email &&
-        this.state.email.indexOf("@") >= 1 &&
-        this.state.email.length >= 6 &&
-        this.state.email.split("@").length == 2) {
+      this.state.email.indexOf("@") >= 1 &&
+      this.state.email.length >= 6 &&
+      this.state.email.split("@").length == 2) {
       return true;
     }
     return false;
@@ -255,7 +285,7 @@ class Home extends React.Component<Props, State> {
         <SafeAreaView style={Styles.containerCenter}>
           <KeyboardAvoidingView contentContainerStyle={Styles.containerCenter} behavior={Platform.OS == "ios" ? "padding" : "height"}>
             <ScrollView contentContainerStyle={Styles.containerCenter}>
-              <Text style={style.claim}>{this.props.i18n.t("signinAsAt", {"user": this.state.email.toLowerCase(), "org": this.org?.name})}</Text>
+              <Text style={style.claim}>{this.props.i18n.t("signinAsAt", { "user": this.state.email.toLowerCase(), "org": this.org?.name })}</Text>
               {invalidText}
               <TextInput style={style.textInput} value={this.state.password} onChangeText={text => this.setState({ password: text })} placeholder={this.props.i18n.t("password")} secureTextEntry={true} autoFocus={true} onSubmitEditing={this.onPasswordSubmit} />
               <View>
@@ -276,7 +306,7 @@ class Home extends React.Component<Props, State> {
 
     if (this.state.providers != null) {
       let buttons = this.state.providers.map(provider => this.renderAuthProviderButton(provider, style));
-      let providerSelection = <Text style={style.claim}>{this.props.i18n.t("signinAsAt", {"user": this.state.email.toLowerCase(), "org": this.org?.name})}</Text>;
+      let providerSelection = <Text style={style.claim}>{this.props.i18n.t("signinAsAt", { "user": this.state.email.toLowerCase(), "org": this.org?.name })}</Text>;
       if (buttons.length === 0) {
         providerSelection = <Text style={style.claim}>{this.props.i18n.t("errorNoAuthProviders")}</Text>
       }

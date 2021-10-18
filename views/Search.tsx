@@ -3,7 +3,7 @@ import { Text, View, Platform, SafeAreaView, TouchableOpacity, ScrollView } from
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Styles } from '../types/Styles';
 import DateTimePicker, { Event } from '@react-native-community/datetimepicker';
-import { Formatting, Location, Booking, Ajax, AjaxError } from '../commons';
+import { Formatting, Location, Booking, Ajax, AjaxError, AjaxCredentials } from '../commons';
 import { RouteProp } from '@react-navigation/native';
 import { AuthContext } from '../types/AuthContextData';
 import Storage from '../types/Storage';
@@ -294,8 +294,9 @@ class Search extends React.Component<Props, State> {
   }
 
   logout = async () => {
-    await Storage.deleteJWT();
-    this.context.setDetails("", "");
+    Ajax.CREDENTIALS = new AjaxCredentials();
+    await Ajax.PERSISTER.deleteCredentialsFromSessionStorage();
+    this.context.setDetails("");
   }
 
   formatDateTime = (date: Date) => {
