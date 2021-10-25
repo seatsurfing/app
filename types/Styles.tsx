@@ -7,7 +7,8 @@ export const ColorBlue = "rgb(10, 132, 255)";
 
 export const Styles = StyleSheet.create({
     container: {
-      flex: 1
+      flex: 1,
+      backgroundColor: '#fff',
     },
     containerWithHeader: {
       backgroundColor: ColorBlue,
@@ -134,6 +135,10 @@ export const Styles = StyleSheet.create({
       backgroundColor: "silver",
       width: "100%"
     },
+    grayLink: {
+      fontSize: PrimaryTextSize,
+      color: "#555"
+    },
     formButtom: {
       fontSize: PrimaryTextSize,
       color: ColorBlue
@@ -151,7 +156,7 @@ export const Styles = StyleSheet.create({
     },
     mapImg: {
       flex: 1,
-      resizeMode: "cover"
+      resizeMode: "cover",
     },
     mapOverlay: {
       backgroundColor: "#000000cc",
@@ -160,11 +165,30 @@ export const Styles = StyleSheet.create({
       flex: 1
     },
     mapOverlayBox: {
-      backgroundColor: "#ffffffcc",
+      backgroundColor: "#eee",
       borderRadius: 20,
       borderWidth: 1,
       borderColor: "gray",
       width: "80%",
+      maxWidth: 300,
+    },
+    mapOverlayContent: {
       padding: 25
+    },
+    mapOverlayFooter: {
+      flexDirection: "row",
+      height: 50,
+      borderTopWidth: 1,
+      borderTopColor: "#555",
+    },
+    mapOverlayFooterButton: {
+      flex: 1,
+    },
+    mapOverlayFooterButtonText: {
+      textAlign: "center",
+      fontSize: PrimaryTextSize,
+      fontWeight: "bold",
+      paddingTop: 12,
+      height: "100%",
     }
   });

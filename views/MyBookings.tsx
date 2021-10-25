@@ -82,18 +82,16 @@ class MyBookings extends React.Component<Props, State> {
       loadingIndicator = <ActivityIndicator size="large" style={Styles.activityIndicator} />;
     }
     if (this.state.selectedItem) {
+      let buttons = [
+        { label: this.props.i18n.t("delete"), onPress: () => { this.state.selectedItem ? this.cancelBooking(this.state.selectedItem) : {} } },
+        { label: this.props.i18n.t("ok"), onPress: () => this.setState({ selectedItem: null }) },
+      ];
       infoModal = (
-        <ModalDialog visible={this.state.selectedItem != null}>
+        <ModalDialog visible={this.state.selectedItem != null} buttons={buttons}>
           <Text style={Styles.text}>{this.props.i18n.t("space")}: {this.state.selectedItem.space.name}</Text>
           <Text style={Styles.text}>{this.props.i18n.t("area")}: {this.state.selectedItem.space.location.name}</Text>
           <Text style={Styles.text}>{this.props.i18n.t("enter")}: {Formatting.getFormatterShort().format(new Date(this.state.selectedItem.enter))}</Text>
           <Text style={Styles.text}>{this.props.i18n.t("leave")}: {Formatting.getFormatterShort().format(new Date(this.state.selectedItem.leave))}</Text>
-          <View style={style.button}>
-            <Button title={this.props.i18n.t("cancel")} onPress={() => { this.state.selectedItem ? this.cancelBooking(this.state.selectedItem) : {} }} color="red" />
-          </View>
-          <View style={style.button}>
-            <Button title={this.props.i18n.t("ok")} onPress={() => { this.setState({ selectedItem: null }) }} />
-          </View>
         </ModalDialog>
       );
     }

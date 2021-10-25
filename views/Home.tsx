@@ -10,6 +10,7 @@ import Storage from '../types/Storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { withTranslation } from 'react-i18next';
 import { i18n } from 'i18next';
+import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 
 interface Props {
@@ -36,7 +37,7 @@ class Home extends React.Component<Props, State> {
     super(props);
     this.org = null;
     this.state = {
-      url: (Ajax.URL ? Ajax.URL : "https://"),
+      url: (Ajax.URL ? Ajax.URL : ""),
       requirePassword: false,
       password: "",
       email: "",
@@ -209,34 +210,36 @@ class Home extends React.Component<Props, State> {
   render = () => {
     const style = StyleSheet.create({
       button: {
-        backgroundColor: "rgb(10, 132, 255)",
+        backgroundColor: "#000",
         padding: 15,
         width: 200,
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: "#fff"
+        borderRadius: 0,
+        borderWidth: 0,
+        marginBottom: 25,
       },
       buttonSeconday: {
         backgroundColor: "silver",
         padding: 15,
         width: 200,
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: "#fff"
+        borderRadius: 0,
+        borderWidth: 0,
+        marginBottom: 25,
       },
       buttonText: {
         textAlign: "center",
         color: "white",
-        fontSize: PrimaryTextSize
+        fontSize: PrimaryTextSize,
+        textTransform: "uppercase"
       },
       buttonTextDisabled: {
         textAlign: "center",
         color: "silver",
         fontSize: PrimaryTextSize,
+        textTransform: "uppercase"
       },
       claim: {
         fontSize: PrimaryTextSize,
-        color: "gray",
+        color: "#000",
         marginBottom: 25,
         textAlign: "center"
       },
@@ -248,23 +251,37 @@ class Home extends React.Component<Props, State> {
       },
       textInput: {
         ...Styles.textInput,
-        flex: 0,
-        marginRight: 0,
-        backgroundColor: "#fff",
-        padding: 15,
-        width: 300,
-        borderColor: "#ced4da",
-        borderRadius: 10,
-        borderWidth: 1,
-        marginBottom: 15
+        flex: 1,
+        margin: 0,
+        padding: 0,
       },
       logo: {
-        marginBottom: 25,
+        marginBottom: 75,
         width: 300,
         height: (223 / 1024) * 300
       },
       linkBottom: {
         marginTop: 25
+      },
+      backLinkTopLeft: {
+        flexDirection: 'row',
+      },
+      textInputPrependIcon: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: "#fff",
+        marginRight: 0,
+        marginBottom: 30,
+        padding: 5,
+        width: 300,
+        borderColor: "#555",
+        borderWidth: 0,
+        borderBottomWidth: 1,
+      },
+      inlineIconPrepend: {
+        margin: 5,
+        marginRight: 15,
       }
     });
 
@@ -284,18 +301,21 @@ class Home extends React.Component<Props, State> {
       return (
         <SafeAreaView style={Styles.containerCenter}>
           <KeyboardAvoidingView contentContainerStyle={Styles.containerCenter} behavior={Platform.OS == "ios" ? "padding" : "height"}>
+            <TouchableOpacity style={style.backLinkTopLeft} onPress={() => this.setState({ invalid: false, requirePassword: false, providers: null, loading: false })}>
+              <Ionicons name="chevron-back-outline" size={20} color="#555" />
+              <Text style={Styles.grayLink}>{this.props.i18n.t("back")}</Text>
+            </TouchableOpacity>
             <ScrollView contentContainerStyle={Styles.containerCenter}>
+              <Image source={require("../assets/logo.png")} style={style.logo} />
               <Text style={style.claim}>{this.props.i18n.t("signinAsAt", { "user": this.state.email.toLowerCase(), "org": this.org?.name })}</Text>
               {invalidText}
-              <TextInput style={style.textInput} value={this.state.password} onChangeText={text => this.setState({ password: text })} placeholder={this.props.i18n.t("password")} secureTextEntry={true} autoFocus={true} onSubmitEditing={this.onPasswordSubmit} />
+              <View style={style.textInputPrependIcon}>
+                <Ionicons name="key-outline" size={20} color="#555" style={style.inlineIconPrepend} />
+                <TextInput style={style.textInput} value={this.state.password} onChangeText={text => this.setState({ password: text })} placeholder={this.props.i18n.t("password")} secureTextEntry={true} autoFocus={true} onSubmitEditing={this.onPasswordSubmit} />
+              </View>
               <View>
                 <TouchableHighlight style={style.button} onPress={this.onPasswordSubmit} disabled={!this.canPasswordLogin()}>
                   <Text style={this.canPasswordLogin() ? style.buttonText : style.buttonTextDisabled}>{this.props.i18n.t("signin")}</Text>
-                </TouchableHighlight>
-              </View>
-              <View>
-                <TouchableHighlight style={style.buttonSeconday} onPress={() => this.setState({ invalid: false, requirePassword: false, providers: null, loading: false })}>
-                  <Text style={style.buttonText}>{this.props.i18n.t("back")}</Text>
                 </TouchableHighlight>
               </View>
             </ScrollView>
@@ -312,15 +332,17 @@ class Home extends React.Component<Props, State> {
       }
       return (
         <SafeAreaView style={Styles.containerCenter}>
-          <ScrollView contentContainerStyle={Styles.containerCenter}>
-            {providerSelection}
-            {buttons}
-            <View>
-              <TouchableHighlight style={style.buttonSeconday} onPress={() => this.setState({ invalid: false, requirePassword: false, providers: null, loading: false })}>
-                <Text style={style.buttonText}>{this.props.i18n.t("back")}</Text>
-              </TouchableHighlight>
-            </View>
-          </ScrollView>
+          <KeyboardAvoidingView contentContainerStyle={Styles.containerCenter} behavior={Platform.OS == "ios" ? "padding" : "height"}>
+            <TouchableOpacity style={style.backLinkTopLeft} onPress={() => this.setState({ invalid: false, requirePassword: false, providers: null, loading: false })}>
+              <Ionicons name="chevron-back-outline" size={20} color="#555" />
+              <Text style={Styles.grayLink}>{this.props.i18n.t("back")}</Text>
+            </TouchableOpacity>
+            <ScrollView contentContainerStyle={Styles.containerCenter}>
+            <Image source={require("../assets/logo.png")} style={style.logo} />
+              {providerSelection}
+              {buttons}
+            </ScrollView>
+          </KeyboardAvoidingView>
         </SafeAreaView>
       );
     }
@@ -335,15 +357,20 @@ class Home extends React.Component<Props, State> {
           <ScrollView contentContainerStyle={Styles.scrollViewCenter}>
             <View style={Styles.growMax}></View>
             <Image source={require("../assets/logo.png")} style={style.logo} />
-            <Text style={style.claim}>{this.props.i18n.t("findYourPlace")}</Text>
             {invalidText}
-            <TextInput style={style.textInput} value={this.state.url} onChangeText={text => this.setState({ url: text })} placeholder={this.props.i18n.t("urlPlaceholder")} keyboardType="url" />
-            <TextInput style={style.textInput} value={this.state.email} onChangeText={text => this.setState({ email: text })} placeholder={this.props.i18n.t("emailPlaceholder")} keyboardType="email-address" onSubmitEditing={this.submitLoginForm} />
+            <View style={style.textInputPrependIcon}>
+              <Ionicons name="globe-outline" size={20} color="#555" style={style.inlineIconPrepend} />
+              <TextInput style={style.textInput} value={this.state.url} onChangeText={text => this.setState({ url: text })} placeholder={this.props.i18n.t("urlPlaceholder")} keyboardType="url" />
+            </View>
+            <View style={style.textInputPrependIcon}>
+              <Ionicons name="person-outline" size={20} color="#555" style={style.inlineIconPrepend} />
+              <TextInput style={style.textInput} value={this.state.email} onChangeText={text => this.setState({ email: text })} placeholder={this.props.i18n.t("emailPlaceholder")} keyboardType="email-address" onSubmitEditing={this.submitLoginForm} />
+            </View>
             <TouchableHighlight style={style.button} onPress={this.submitLoginForm} disabled={!this.canLogin()}>
               <Text style={this.canLogin() ? style.buttonText : style.buttonTextDisabled}>{this.props.i18n.t("getStarted")}</Text>
             </TouchableHighlight>
             <View style={Styles.growMax}></View>
-            <TouchableOpacity style={style.linkBottom} onPress={() => this.props.navigation.navigate("About")}><Text style={Styles.formButtom}>{this.props.i18n.t("about")}</Text></TouchableOpacity>
+            <TouchableOpacity style={style.linkBottom} onPress={() => this.props.navigation.navigate("About")}><Text style={Styles.grayLink}>{this.props.i18n.t("about")}</Text></TouchableOpacity>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>

@@ -1,6 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import * as Localization from 'expo-localization';
+import { Formatting } from '../commons';
 
 const deviceLanguage = Localization.locale.split('-')[0];
 const resources = {
@@ -37,10 +38,12 @@ const resources = {
             "errorBookingDuration": "Die maximale Buchungsdauer beträgt {{num}} Stunden.",
             "errorTooManyConcurrent": "Kapazitätsgrenze des gewählten Bereichs ist erreicht.",
             "errorUnknown": "Unbekannter Fehler, bitte versuche es später erneut.",
+            "confirmBookingText": "Platz {{space}} reservieren?",
             "searchSpace": "Plätze suchen",
             "cancelBooking": "Stornieren",
             "ok": "OK",
             "confirmBooking": "Buchung bestätigen",
+            "book": "Buchen",
             "cancel": "Abbrechen",
             "bookingConfirmed": "Deine Buchung wurde bestätigt!",
             "about": "Über...",
@@ -54,6 +57,7 @@ const resources = {
             "moreInfo": "Mehr Informationen",
             "privacy": "Datenschutz",
             "timezone": "Zeitzone",
+            "delete": "Löschen",
         }
     },
     en: {
@@ -89,12 +93,14 @@ const resources = {
             "errorBookingDuration": "The maximum booking duration is {{num}} hours.",
             "errorTooManyConcurrent": "Capacity limit reached in selected area.",
             "errorUnknown": "Unknown error, please try again later.",
+            "confirmBookingText": "Book space {{space}}?",
             "searchSpace": "Find a space",
             "cancelBooking": "Cancel",
             "ok": "OK",
             "confirmBooking": "Confirm booking",
             "cancel": "Cancel",
             "bookingConfirmed": "Your booking has been confirmed!",
+            "book": "Book",
             "about": "About...",
             "providedBy": "Seatsurfing is provided to you by:",
             "limitedLiability": "limited liability",
@@ -106,6 +112,7 @@ const resources = {
             "moreInfo": "More information",
             "privacy": "Privacy Policy",
             "timezone": "Time zone",
+            "delete": "Delete",
         }
     }
 };
@@ -119,5 +126,7 @@ i18n
     fallbackLng: "en",
     keySeparator: false
 });
+
+Formatting.Language = i18n.language;
 
 export default i18n;

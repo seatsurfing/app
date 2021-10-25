@@ -1,14 +1,18 @@
 import React from 'react';
-import { Text, View, Platform, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
+import { Text, View, Platform, TouchableOpacity, ScrollView, ImageBackground, StyleSheet, ActivityIndicator, Animated, FlatList } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Styles } from '../types/Styles';
+import { Styles, PrimaryTextSize, CaptionTextSize } from '../types/Styles';
 import DateTimePicker, { Event } from '@react-native-community/datetimepicker';
-import { Formatting, Location, Booking, Ajax, AjaxError, AjaxCredentials } from '../commons';
+import { Formatting, Location, Ajax, AjaxCredentials, Space, Booking, AjaxError } from '../commons';
 import { RouteProp } from '@react-navigation/native';
 import { AuthContext } from '../types/AuthContextData';
-import Storage from '../types/Storage';
 import { withTranslation } from 'react-i18next';
 import { i18n } from 'i18next';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Ionicons from '@expo/vector-icons/build/Ionicons';
+import { PanGestureHandler, State as GestureState } from 'react-native-gesture-handler';
+import { Picker } from '@react-native-picker/picker';
+import ModalDialog from './ModalDialog';
 import ErrorText from '../types/ErrorText';
 
 interface Props {
@@ -18,50 +22,102 @@ interface Props {
 }
 
 interface State {
+  loading: boolean
+  style: any
+  showBookingNames: boolean
+  selectedSpace: Space | null
+  showConfirm: boolean
+  showSuccess: boolean
+  showError: boolean
+  errorText: string
+  locationId: string
   enter: Date
   leave: Date
-  locationId: string
-  locationTitle: string;
   enterMode: 'date' | 'time' | 'datetime' | 'countdown'
   leaveMode: 'date' | 'time' | 'datetime' | 'countdown'
+  showLocationPicker: boolean
   showEnterPicker: boolean
   showLeavePicker: boolean
   canSearch: boolean
   canSearchHint: string
+  minDragOffset: number
+  showMapOverlay: boolean
+  listView: boolean
+  mapOffsetX: number
+  mapOffsetY: number
 }
 
 class Search extends React.Component<Props, State> {
+  static dragOffset = 25;
+  static footerHeightCollapsed = 125;
   static contextType = AuthContext;
+  data: Space[];
+  locations: Location[];
+  mapData: string;
   curBookingCount: number = 0;
+  mapOverlayOpacity: Animated.Value
+  footerHeight: Animated.Value
+  footerHeightValue: number
+  containerHeight: number
 
   constructor(props: Props) {
     super(props);
+    this.data = [];
+    this.locations = [];
+    this.mapData = "";
+    this.mapOverlayOpacity = new Animated.Value(0);
+    this.footerHeight = new Animated.Value(Search.footerHeightCollapsed);
+    this.footerHeight.addListener(this.onFooterHeightChange);
+    this.footerHeightValue = Search.footerHeightCollapsed;
+    this.containerHeight = 0;
     this.state = {
+      loading: true,
+      style: StyleSheet.create({
+        container: {
+          height: 700,
+          width: 700
+        },
+      }),
+      showBookingNames: false,
+      selectedSpace: null,
+      showConfirm: false,
+      showSuccess: false,
+      showError: false,
+      errorText: "",
+      locationId: "",
       enter: new Date(),
       leave: new Date(),
-      locationId: "",
-      locationTitle: this.props.i18n.t("none"),
       enterMode: "date",
       leaveMode: "date",
+      showLocationPicker: false,
       showEnterPicker: false,
       showLeavePicker: false,
       canSearch: false,
-      canSearchHint: ""
+      canSearchHint: "",
+      minDragOffset: -1 * Search.dragOffset,
+      showMapOverlay: false,
+      listView: false,
+      mapOffsetX: 0,
+      mapOffsetY: 0,
     }
     this.props.navigation.addListener("focus", this.onNavigationFocus);
   }
 
   componentDidMount = () => {
     this.initDates();
-    this.propsToState();
-    this.initLocation();
-    this.initCurrentBookingCount();
-  }
-
-  componentDidUpdate = (prevProps: Props) => {
-    if (JSON.stringify(this.props.route.params) !== JSON.stringify(prevProps.route.params)) {
-      this.propsToState();
-    }
+    let promises = [
+      this.loadLocations()
+    ];
+    Promise.all(promises).then(() => {
+      if (this.state.locationId === "" && this.locations.length > 0) {
+        this.setState({ locationId: this.locations[0].id });
+        this.loadMap(this.state.locationId).then(() => {
+          this.setState({ loading: false });
+        });
+      } else {
+        this.setState({ loading: false });
+      }
+    });
   }
 
   componentWillUnmount = () => {
@@ -69,14 +125,35 @@ class Search extends React.Component<Props, State> {
   }
 
   onNavigationFocus = () => {
-    this.initCurrentBookingCount();
+    if (this.state.locationId) {
+      let promises = [
+        this.initCurrentBookingCount(),
+        this.loadSpaces(this.state.locationId),
+      ];
+      Promise.all(promises).then(() => {
+        this.setState({loading: false});
+      });
+    }
   }
 
-  initCurrentBookingCount = () => {
-    Booking.list().then(list => {
+  initCurrentBookingCount = async () => {
+    return Booking.list().then(list => {
       this.curBookingCount = list.length;
       this.updateCanSearch();
     });
+  }
+
+  centerMapView = () => {
+    this.setState({
+      mapOffsetX: this.state.style.container.width / 2,
+      mapOffsetY: this.state.style.container.height / 2,
+    });
+  }
+
+  onFooterHeightChange = (e: any) => {
+    if (e) {
+      this.footerHeightValue = e.value;
+    }
   }
 
   initDates = () => {
@@ -127,33 +204,190 @@ class Search extends React.Component<Props, State> {
     }
   }
 
-  initLocation = () => {
-    if (this.props.route.params && this.props.route.params.location && this.props.route.params.location.id && this.props.route.params.location.name) {
-      return;
-    }
-    Storage.getLocation().then(locationId => {
-      if (locationId) {
-        Location.get(locationId).then(location => {
-          this.setState({
-            locationId: location.id,
-            locationTitle: location.name
-          });
-          this.updateCanSearch();
-        }).catch(() => {
-          // Ignore
-        });
-      }
+  loadLocations = async (): Promise<void> => {
+    return Location.list().then(list => {
+      this.locations = list;
     });
   }
 
-  propsToState = () => {
-    if (this.props.route.params && this.props.route.params.location && this.props.route.params.location.id && this.props.route.params.location.name) {
-      this.setState({
-        locationId: this.props.route.params.location.id,
-        locationTitle: this.props.route.params.location.name
+  loadMap = async (locationId: string) => {
+    this.setState({loading: true});
+    return Location.get(locationId).then(location => {
+      return this.loadSpaces(location.id).then(() => {
+        return Ajax.get(location.getMapUrl()).then(mapData => {
+          this.mapData = "data:image/" + location.mapMimeType + ";base64," + mapData.json.data;
+          this.setState({
+            style: StyleSheet.create({
+              ...this.state.style,
+              container: {
+                width: location.mapWidth,
+                height: location.mapHeight
+              }
+            }),
+          }, () => this.centerMapView());
+        });
       });
-      this.updateCanSearch();
+    })
+  }
+
+  loadSpaces = async (locationId: string) => {
+    this.setState({loading: true});
+    return Space.listAvailability(locationId, this.state.enter, this.state.leave).then(list => {
+      this.data = list;
+    });
+  }
+
+  onSpaceSelect = (item: Space) => {
+    if (item.available) {
+      this.setState({
+        selectedSpace: item,
+        showConfirm: true
+      });
+    } else if (!item.available && item.bookings && item.bookings.length > 0) {
+      this.setState({
+        showBookingNames: true,
+        selectedSpace: item
+      });
     }
+  }
+
+  renderListItem = (item: Space) => {
+    let text = <Text style={Styles.text} onPress={() => this.onSpaceSelect(item)}>{item.name}</Text>
+    if (!item.available) {
+      text = <Text style={[Styles.text, { color: "#aaa" }]} onPress={() => this.onSpaceSelect(item)}>{item.name}</Text>
+    }
+    return (
+      <View key={item.id}>
+        <View style={Styles.tableRow}>
+          {text}
+        </View>
+        <View style={Styles.horizontalLine}></View>
+      </View>
+    );
+  }
+
+  renderItem = (item: Space) => {
+    const style = StyleSheet.create({
+      box: {
+        backgroundColor: item.available ? "rgba(48, 209, 88, 0.9)" : "rgba(255, 69, 58, 0.9)",
+        position: "absolute",
+        left: item.x,
+        top: item.y,
+        width: item.width,
+        height: item.height,
+        transform: [{ rotate: item.rotation + "deg" }],
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center"
+      },
+      text: {
+        width: item.width,
+        textAlign: "center",
+        fontSize: CaptionTextSize,
+        color: "#fff",
+        transform: [{ rotate: "0deg" }]
+      },
+    });
+    if (item.width < item.height) {
+      style.text = {
+        ...style.text,
+        width: item.height,
+        transform: [{ rotate: "90deg" }],
+      };
+    }
+    return (
+      <TouchableOpacity key={item.id} style={style.box} onPress={() => this.onSpaceSelect(item)}>
+        <Text style={style.text} numberOfLines={1}>{item.name}</Text>
+      </TouchableOpacity>
+    );
+  }
+
+  onFooterStateChange = (e: any) => {
+    if (e && e.nativeEvent && e.nativeEvent.state === GestureState.END) {
+      if (this.state.minDragOffset < 0) {
+        // Drag up
+        this.setState({
+          minDragOffset: Search.dragOffset,
+        });
+        Animated.timing(this.footerHeight, {
+          toValue: this.containerHeight * 0.8,
+          duration: 250,
+          useNativeDriver: false,
+        }).start();
+        this.showMapOverlay();
+      } else {
+        // Drag down
+        this.setState({
+          minDragOffset: -1 * Search.dragOffset,
+        });
+        Animated.timing(this.footerHeight, {
+          toValue: Search.footerHeightCollapsed,
+          duration: 250,
+          useNativeDriver: false,
+        }).start();
+        this.hideMapOverlay();
+      }
+    }
+  }
+
+  onFooterGestureEvent = (e: any) => {
+    if (e && e.nativeEvent) {
+      Animated.timing(this.footerHeight, {
+        toValue: (-1 * e.nativeEvent.y + this.footerHeightValue),
+        duration: 1,
+        useNativeDriver: false,
+      }).start();
+    }
+  }
+
+  updateCanSearch = async () => {
+    let res = true;
+    let hint = "";
+    if (this.curBookingCount >= this.context.maxBookingsPerUser) {
+      res = false;
+      hint = this.props.i18n.t("errorBookingLimit", { "num": this.context.maxBookingsPerUser });
+    }
+    if (!this.state.locationId) {
+      res = false;
+      hint = this.props.i18n.t("errorPickArea");
+    }
+    let now = new Date();
+    let enterTime = new Date(this.state.enter);
+    if (this.context.dailyBasisBooking) {
+      enterTime.setHours(23, 59, 59);
+    }
+    if (enterTime.getTime() <= now.getTime()) {
+      res = false;
+      hint = this.props.i18n.t("errorEnterFuture");
+    }
+    if (this.state.leave.getTime() <= this.state.enter.getTime()) {
+      res = false;
+      hint = this.props.i18n.t("errorLeaveAfterEnter");
+    }
+    const MS_PER_MINUTE = 1000 * 60;
+    const MS_PER_HOUR = MS_PER_MINUTE * 60;
+    const MS_PER_DAY = MS_PER_HOUR * 24;
+    let bookingAdvanceDays = Math.floor((this.state.enter.getTime() - new Date().getTime()) / MS_PER_DAY);
+    if (bookingAdvanceDays > this.context.maxDaysInAdvance) {
+      res = false;
+      hint = this.props.i18n.t("errorDaysAdvance", { "num": this.context.maxDaysInAdvance });
+    }
+    let bookingDurationHours = Math.floor((this.state.leave.getTime() - this.state.enter.getTime()) / MS_PER_MINUTE) / 60;
+    if (bookingDurationHours > this.context.maxBookingDurationHours) {
+      res = false;
+      hint = this.props.i18n.t("errorBookingDuration", { "num": this.context.maxBookingDurationHours });
+    }
+    let self = this;
+    return new Promise<void>(function (resolve, reject) {
+      self.setState({
+        canSearch: res,
+        canSearchHint: hint
+      }, () => resolve());
+    });
+  }
+
+  startLocationPicking = () => {
+    this.setState({ showLocationPicker: !this.state.showLocationPicker });
   }
 
   startEnterPicking = () => {
@@ -179,15 +413,30 @@ class Search extends React.Component<Props, State> {
   }
 
   setEnterDate = (event: Event, selectedDate?: Date) => {
+    let dateChangedCb = () => {
+      this.updateCanSearch().then(() => {
+        if (!this.state.canSearch) {
+          this.setState({loading: false});
+        } else {
+          let promises = [
+            this.initCurrentBookingCount(),
+            this.loadSpaces(this.state.locationId),
+          ];
+          Promise.all(promises).then(() => {
+            this.setState({loading: false});
+          });
+        }
+      });
+    };
     let diff = this.state.leave.getTime() - this.state.enter.getTime();
     let newDate = selectedDate || this.state.enter;
     let leave = new Date();
     leave.setTime(newDate.getTime() + diff);
     if (this.state.enterMode === "datetime") {
-      this.setState({ 
+      this.setState({
         enter: newDate,
         leave: leave
-      }, () => this.updateCanSearch());
+      }, () => dateChangedCb());
     } else if (this.state.enterMode === "date") {
       if (this.context.dailyBasisBooking) {
         selectedDate?.setHours(0, 0, 0);
@@ -196,107 +445,61 @@ class Search extends React.Component<Props, State> {
           enter: newDate,
           leave: leave,
           showEnterPicker: false
-        }, () => this.updateCanSearch());
-        return;
+        }, () => dateChangedCb());
+      } else {
+        this.setState({
+          enter: newDate,
+          leave: leave,
+          enterMode: "time"
+        }, () => dateChangedCb());
       }
-      this.setState({
-        enter: newDate,
-        leave: leave,
-        enterMode: "time"
-      }, () => this.updateCanSearch());
     } else if (this.state.enterMode === "time") {
       this.setState({
         enter: newDate,
         leave: leave,
         showEnterPicker: false
-      }, () => this.updateCanSearch());
+      }, () => dateChangedCb());
     }
   }
 
   setLeaveDate = (event: Event, selectedDate?: Date) => {
+    let dateChangedCb = () => {
+      this.updateCanSearch().then(() => {
+        if (!this.state.canSearch) {
+          this.setState({loading: false});
+        } else {
+          let promises = [
+            this.initCurrentBookingCount(),
+            this.loadSpaces(this.state.locationId),
+          ];
+          Promise.all(promises).then(() => {
+            this.setState({loading: false});
+          });
+        }
+      });
+    };
     let newDate = selectedDate || this.state.enter;
     if (this.state.leaveMode === "datetime") {
-      this.setState({ leave: newDate }, () => this.updateCanSearch());
+      this.setState({ leave: newDate }, () => dateChangedCb());
     } else if (this.state.leaveMode === "date") {
       if (this.context.dailyBasisBooking) {
         selectedDate?.setHours(23, 59, 59);
         this.setState({
           leave: newDate,
           showLeavePicker: false
-        }, () => this.updateCanSearch());
-        return;
+        }, () => dateChangedCb());
+      } else {
+        this.setState({
+          leave: newDate,
+          leaveMode: "time"
+        }, () => dateChangedCb());
       }
-      this.setState({
-        leave: newDate,
-        leaveMode: "time"
-      }, () => this.updateCanSearch());
     } else if (this.state.leaveMode === "time") {
       this.setState({
         leave: newDate,
         showLeavePicker: false
-      }, () => this.updateCanSearch());
+      }, () => dateChangedCb());
     }
-  }
-
-  getSelectedLocationName = () => {
-    if (this.state.locationTitle) {
-      return this.state.locationTitle;
-    } else {
-      return this.props.i18n.t("none");
-    }
-  }
-
-  getSelectedLocationId = () => {
-    return this.state.locationId;
-  }
-
-  updateCanSearch = () => {
-    let res = true;
-    let hint = "";
-    if (this.curBookingCount >= this.context.maxBookingsPerUser) {
-      res = false;
-      hint = this.props.i18n.t("errorBookingLimit", {"num": this.context.maxBookingsPerUser});
-    }
-    if (!this.state.locationId) {
-      res = false;
-      hint = this.props.i18n.t("errorPickArea");
-    }
-    let now = new Date();
-    let enterTime = new Date(this.state.enter);
-    if (this.context.dailyBasisBooking) {
-      enterTime.setHours(23, 59, 59);
-    }
-    if (enterTime.getTime() <= now.getTime()) {
-      res = false;
-      hint = this.props.i18n.t("errorEnterFuture");
-    }
-    if (this.state.leave.getTime() <= this.state.enter.getTime()) {
-      res = false;
-      hint = this.props.i18n.t("errorLeaveAfterEnter");
-    }
-    const MS_PER_MINUTE = 1000 * 60;
-    const MS_PER_HOUR = MS_PER_MINUTE * 60;
-    const MS_PER_DAY = MS_PER_HOUR * 24;
-    let bookingAdvanceDays = Math.floor((this.state.enter.getTime() - new Date().getTime()) / MS_PER_DAY);
-    if (bookingAdvanceDays > this.context.maxDaysInAdvance) {
-      res = false;
-      hint = this.props.i18n.t("errorDaysAdvance", {"num": this.context.maxDaysInAdvance});
-    }
-    let bookingDurationHours = Math.floor((this.state.leave.getTime() - this.state.enter.getTime()) / MS_PER_MINUTE) / 60;
-    if (bookingDurationHours > this.context.maxBookingDurationHours) {
-      res = false;
-      hint = this.props.i18n.t("errorBookingDuration", {"num": this.context.maxBookingDurationHours});
-    }
-    this.setState({
-      canSearch: res,
-      canSearchHint: hint
-    });
-  }
-
-  logout = async () => {
-    Ajax.CREDENTIALS = new AjaxCredentials();
-    await Ajax.PERSISTER.deleteCredentialsFromSessionStorage();
-    this.context.setDetails("");
   }
 
   formatDateTime = (date: Date) => {
@@ -306,35 +509,321 @@ class Search extends React.Component<Props, State> {
     return Formatting.getFormatter().format(date);
   }
 
-  onSearchClick = () => {
-    this.setState({canSearch: false, canSearchHint: ""});
-    let payload = {
-      "locationId": this.state.locationId,
-      "enter": Formatting.convertToFakeUTCDate(this.state.enter).toISOString(),
-      "leave": Formatting.convertToFakeUTCDate(this.state.leave).toISOString(),
-    };
-    Ajax.postData("/booking/precheck/", payload).then(res => {
-      this.setState({ canSearch: true });
-      this.props.navigation.navigate("SearchResult", { enter: this.state.enter.getTime(), leave: this.state.leave.getTime(), locationId: this.getSelectedLocationId() })
+  formatDateTimeShort = (date: Date) => {
+    if (this.context.dailyBasisBooking) {
+      return Formatting.getFormatterNoTime().format(date);
+    }
+    return Formatting.getFormatterShort().format(date);
+  }
+
+  logout = async () => {
+    Ajax.CREDENTIALS = new AjaxCredentials();
+    await Ajax.PERSISTER.deleteCredentialsFromSessionStorage();
+    this.context.setDetails("");
+  }
+
+  showMapOverlay = () => {
+    this.setState({ showMapOverlay: true });
+    Animated.timing(this.mapOverlayOpacity, {
+      toValue: 0.8,
+      duration: 250,
+      useNativeDriver: true,
+    }).start();
+  }
+
+  hideMapOverlay = () => {
+    Animated.timing(this.mapOverlayOpacity, {
+      toValue: 0.0,
+      duration: 250,
+      useNativeDriver: true,
+    }).start(e => {
+      if (e.finished) {
+        this.setState({ showMapOverlay: false });
+      }
+    });
+  }
+
+  toggleListView = () => {
+    this.setState({ listView: !this.state.listView });
+  }
+
+  getStatusBarHeight = (): number => {
+    return 0;
+  }
+
+  onContainerLayout = (e: any) => {
+    if (e && e.nativeEvent && e.nativeEvent.layout) {
+      this.containerHeight = e.nativeEvent.layout.height;
+    }
+  }
+
+  getLocationName = (): string => {
+    let name: string = this.props.i18n.t("none");
+    this.locations.forEach(location => {
+      if (this.state.locationId === location.id) {
+        name = location.name;
+      }
+    });
+    return name;
+  }
+
+  getActualTimezone = (): string => {
+    let tz: string = this.context.defaultTimezone;
+    this.locations.forEach(location => {
+      if (this.state.locationId === location.id && location.timezone) {
+        tz = location.timezone;
+      }
+    });
+    return tz;
+  }
+
+  changeLocation = (id: string) => {
+    this.setState({
+      locationId: id,
+      loading: true,
+    });
+    this.loadMap(id).then(() => {
+      this.setState({ loading: false });
+    });
+  }
+
+  onConfirmBooking = () => {
+    if (this.state.selectedSpace == null) {
+      return;
+    }
+    this.setState({
+      showConfirm: false,
+      loading: true
+    });
+    let booking: Booking = new Booking();
+    booking.enter = new Date(this.state.enter);
+    booking.leave = new Date(this.state.leave);
+    booking.space = this.state.selectedSpace;
+    booking.save().then(() => {
+      this.setState({
+        loading: false,
+        showSuccess: true
+      });
+      this.loadMap(this.state.locationId);
+      setTimeout(() => {
+        this.setState({ showSuccess: false });
+      }, 5000);
     }).catch(e => {
       let code: number = 0;
       if (e instanceof AjaxError) {
         code = e.appErrorCode;
       }
-      this.setState({ canSearch: false, canSearchHint: ErrorText.getTextForAppCode(code, this.props.i18n, this.context) });
+      this.setState({
+        loading: false,
+        showError: true,
+        errorText: ErrorText.getTextForAppCode(code, this.props.i18n, this.context)
+      });
+      setTimeout(() => {
+        this.setState({ showError: false });
+      }, 5000);
     });
   }
 
-  render = () => {
+  renderBookingNameRow = (booking: Booking) => {
+    console.log(booking.enter);
+    let times = <></>
+    if (this.context.dailyBasisBooking) {
+      times = (
+        <>
+          <View style={{ flexDirection: "row" }}>
+            <Ionicons name="enter-outline" size={16} color="#555" />
+            <Text style={{marginLeft: 5}}>{Formatting.getFormatterNoTime().format(booking.enter)}</Text>
+          </View>
+          <View style={{ flexDirection: "row" }}>
+            <Ionicons name="exit-outline" size={16} color="#555" />
+            <Text style={{marginLeft: 5}}>{Formatting.getFormatterNoTime().format(booking.leave)}</Text>
+          </View>
+        </>
+      );
+    } else {
+      times = (
+        <>
+          <View style={{ flexDirection: "row" }}>
+            <Ionicons name="enter-outline" size={16} color="#555" />
+            <Text style={{marginLeft: 5}}>{Formatting.getFormatter().format(booking.enter)}</Text>
+          </View>
+          <View style={{ flexDirection: "row" }}>
+            <Ionicons name="exit-outline" size={16} color="#555" />
+            <Text style={{marginLeft: 5}}>{Formatting.getFormatter().format(booking.leave)}</Text>
+          </View>
+        </>
+      );
+    }
     return (
-      <SafeAreaView style={Styles.container}>
-        <ScrollView>
+      <View key={booking.user.id} style={{marginTop: 10}}>
+        <View style={{ flexDirection: "row" }}>
+          <Ionicons name="person-outline" size={16} color="#555" />
+          <Text style={{marginLeft: 5}}>{booking.user.email}</Text>
+        </View>
+        {times}
+      </View>
+    );
+  }
+
+  render = () => {
+    const style = StyleSheet.create({
+      mapContainer: {
+        flex: 1,
+      },
+      dragArea: {
+        alignItems: "center",
+        paddingTop: 10,
+        paddingBottom: 10,
+      },
+      dragger: {
+        height: 5,
+        width: 50,
+        backgroundColor: "#888",
+        borderRadius: 5,
+      },
+      footerContent: {
+        paddingLeft: 20,
+        paddingRight: 20,
+      },
+      iconPrependRow: {
+        flexDirection: 'row',
+        marginBottom: 5,
+      },
+      footerText: {
+        fontSize: PrimaryTextSize,
+        color: "#555",
+        paddingLeft: 5,
+      },
+      overlay: {
+        position: "absolute",
+        width: "100%",
+        height: "100%",
+        resizeMode: "cover",
+        backgroundColor: "#555",
+        zIndex: 999,
+      },
+      toggleListViewButton: {
+        position: "absolute",
+        padding: 10,
+        right: 10,
+        top: 10,
+        backgroundColor: "#fff",
+        borderRadius: 10,
+        zIndex: 100,
+        borderWidth: 1,
+        borderColor: "#eee",
+        shadowColor: "#000",
+        shadowRadius: 3,
+        shadowOpacity: 0.2,
+        shadowOffset: { width: 0, height: 0 },
+      },
+      footerNav: {
+        backgroundColor: "#eee",
+        flexGrow: 0,
+        shadowColor: "#000",
+        shadowRadius: 1,
+        shadowOpacity: 0.1,
+        borderTopLeftRadius: 10,
+        borderTopRightRadius: 10,
+      },
+      errorText: {
+        fontSize: PrimaryTextSize,
+        textAlign: "center",
+        padding: 25,
+      },
+      button: {
+        marginTop: 15
+      },
+      searchHint: {
+        paddingTop: 10,
+        paddingBottom: 10,
+        fontSize: PrimaryTextSize,
+        color: "red"
+      },
+    });
+
+    let toggleListViewButton = (
+      <TouchableOpacity onPress={this.toggleListView} style={style.toggleListViewButton}><Ionicons name="list-outline" size={20} color="#555" /></TouchableOpacity>
+    );
+    if (this.state.listView) {
+      toggleListViewButton = (
+        <TouchableOpacity onPress={this.toggleListView} style={style.toggleListViewButton}><Ionicons name="map-outline" size={20} color="#555" /></TouchableOpacity>
+      );
+    }
+
+    let overlay = <></>
+    if (this.state.showMapOverlay) {
+      overlay = (
+        <Animated.View style={[style.overlay, { opacity: this.mapOverlayOpacity }]}></Animated.View>
+      );
+    }
+
+    let listOrMap = <></>
+    if (this.state.listView) {
+      listOrMap = (
+        <FlatList data={this.data} renderItem={({ item }) => this.renderListItem(item)} keyExtractor={item => item.id} style={Styles.list} />
+      );
+    } else {
+      listOrMap = (
+        <ScrollView contentOffset={{ x: this.state.mapOffsetX, y: this.state.mapOffsetY }} contentContainerStyle={{ width: this.state.style.container.width }}>
+          <View style={this.state.style.container}>
+            <ImageBackground style={Styles.mapImg} source={{ uri: this.mapData }}>
+              {this.data.map((item) => this.renderItem(item))}
+            </ImageBackground>
+          </View>
+        </ScrollView>
+      );
+    }
+
+    let staticContent = <></>
+    let formContent = <></>
+    if (this.state.minDragOffset < 0) {
+      staticContent = (
+        <View style={style.footerContent}>
+          <View style={style.iconPrependRow}>
+            <Ionicons name="location-outline" size={20} color="#555" />
+            <Text style={style.footerText}>{this.getLocationName()}</Text>
+          </View>
+          <View style={style.iconPrependRow}>
+            <Ionicons name="enter-outline" size={20} color="#555" />
+            <Text style={style.footerText}>{this.formatDateTime(this.state.enter)}</Text>
+          </View>
+          <View style={style.iconPrependRow}>
+            <Ionicons name="exit-outline" size={20} color="#555" />
+            <Text style={style.footerText}>{this.formatDateTime(this.state.leave)}</Text>
+          </View>
+        </View>
+      );
+    } else {
+      let searchHint = <></>
+      if (!this.state.canSearch && this.state.canSearchHint) {
+        searchHint = (
+          <>
+            <View style={Styles.horizontalLine}></View>
+            <View>
+              <Text style={style.searchHint}>{this.state.canSearchHint}</Text>
+            </View>
+          </>
+        );
+      }
+      formContent = (
+        <ScrollView style={style.footerContent}>
           <View>
             <Text style={Styles.sectionHeader}>{this.props.i18n.t("bookSeat")}</Text>
           </View>
           <View style={Styles.section}>
             <View style={Styles.tableRow}>
-              <Text style={Styles.text}>{this.props.i18n.t("enter")}</Text>
+              <Ionicons name="location-outline" size={20} color="#555" />
+              <Text style={Styles.textTableValue} onPress={() => this.startLocationPicking()}>{this.getLocationName()}</Text>
+            </View>
+            {this.state.showLocationPicker && (
+              <Picker selectedValue={this.state.locationId} onValueChange={(id) => this.changeLocation(id)} style={{ width: '100%' }}>
+                {this.locations.map(location => <Picker.Item key={location.id} label={location.name} value={location.id} />)}
+              </Picker>
+            )}
+            <View style={Styles.horizontalLine}></View>
+            <View style={Styles.tableRow}>
+              <Ionicons name="enter-outline" size={20} color="#555" />
               <Text style={Styles.textTableValue} onPress={() => this.startEnterPicking()}>{this.formatDateTime(this.state.enter)}</Text>
             </View>
             {this.state.showEnterPicker && (
@@ -342,21 +831,13 @@ class Search extends React.Component<Props, State> {
             )}
             <View style={Styles.horizontalLine}></View>
             <View style={Styles.tableRow}>
-              <Text style={Styles.text}>{this.props.i18n.t("leave")}</Text>
+              <Ionicons name="exit-outline" size={20} color="#555" />
               <Text style={Styles.textTableValue} onPress={() => this.startLeavePicking()}>{this.formatDateTime(this.state.leave)}</Text>
             </View>
             {this.state.showLeavePicker && (
               <DateTimePicker onChange={this.setLeaveDate} value={this.state.leave} display="spinner" mode={this.state.leaveMode} style={{ width: '100%' }} />
             )}
-            <View style={Styles.horizontalLine}></View>
-            <View style={Styles.tableRow}>
-              <Text style={Styles.text}>{this.props.i18n.t("area")}</Text>
-              <Text style={Styles.textTableValue} onPress={() => this.props.navigation.navigate("SelectLocation")}>{this.getSelectedLocationName()} &#10217;</Text>
-            </View>
-            <View style={Styles.horizontalLine}></View>
-            <View style={Styles.tableRow}>
-              <TouchableOpacity disabled={!this.state.canSearch} onPress={this.onSearchClick}><Text style={this.state.canSearch ? Styles.formButtom : Styles.formButtomDisabled}>{(this.state.canSearch || !this.state.canSearchHint) ? this.props.i18n.t("searchSpace") : this.state.canSearchHint}</Text></TouchableOpacity>
-            </View>
+            {searchHint}
           </View>
           <View>
             <Text style={Styles.sectionHeader}>{this.props.i18n.t("myBookings")}</Text>
@@ -371,7 +852,7 @@ class Search extends React.Component<Props, State> {
           </View>
           <View style={Styles.section}>
             <View style={Styles.tableRow}>
-              <Text style={Styles.text}>{this.props.i18n.t("user")}</Text>
+              <Ionicons name="person-outline" size={20} color="#555" />
               <Text style={Styles.textTableValue}>{this.context.username.toLowerCase()}</Text>
             </View>
             <View style={Styles.horizontalLine}></View>
@@ -384,6 +865,71 @@ class Search extends React.Component<Props, State> {
             </View>
           </View>
         </ScrollView>
+      );
+    }
+
+    let mapContainer = <></>
+    if (this.state.loading) {
+      mapContainer = (
+        <ActivityIndicator size="large" style={Styles.activityIndicator} />
+      );
+    } else {
+      if (this.state.locationId) {
+        mapContainer = (
+          <>
+            {toggleListViewButton}
+            {listOrMap}
+          </>
+        );
+      } else {
+        mapContainer = (
+          <Text style={style.errorText}>{this.props.i18n.t("errorPickArea")}</Text>
+        );
+      }
+    }
+
+    let confirmButtons = [
+      { label: this.props.i18n.t("cancel"), onPress: () => { this.setState({ showConfirm: false }) } },
+      { label: this.props.i18n.t("book"), onPress: () => { this.onConfirmBooking() } },
+    ];
+    let confirmModal = (
+      <ModalDialog visible={this.state.showConfirm} buttons={confirmButtons}>
+        <Text style={Styles.text}>{this.props.i18n.t("confirmBookingText", { space: this.state.selectedSpace?.name })}</Text>
+      </ModalDialog>
+    );
+
+    let bookingNamesModal = (
+      <ModalDialog visible={this.state.showBookingNames} buttons={[{ label: this.props.i18n.t("ok"), onPress: () => { this.setState({ showBookingNames: false }) } }]}>
+        <Text style={Styles.subject}>{this.state.selectedSpace?.name}</Text>
+        {this.state.selectedSpace?.bookings.map(booking => this.renderBookingNameRow(booking))}
+      </ModalDialog>
+    );
+
+    return (
+      <SafeAreaView style={Styles.container} edges={['right', 'top', 'left']} onLayout={this.onContainerLayout}>
+        {bookingNamesModal}
+        {confirmModal}
+        <ModalDialog visible={this.state.showSuccess}>
+          <Text style={Styles.successIcon}>&#128077;</Text>
+          <Text style={Styles.text}>{this.props.i18n.t("bookingConfirmed")}</Text>
+        </ModalDialog>
+        <ModalDialog visible={this.state.showError}>
+          <Text style={Styles.successIcon}>&#129320;</Text>
+          <Text style={Styles.text}>{this.state.errorText}</Text>
+        </ModalDialog>
+        <View style={style.mapContainer}>
+          {mapContainer}
+          {overlay}
+        </View>
+        <Animated.View style={[style.footerNav, { height: this.footerHeight }]}>
+          <PanGestureHandler onHandlerStateChange={this.onFooterStateChange} onGestureEvent={this.onFooterGestureEvent} activeOffsetY={this.state.minDragOffset}>
+            <View style={style.dragArea}>
+              <View style={style.dragger}></View>
+            </View>
+          </PanGestureHandler>
+          {staticContent}
+          {formContent}
+        </Animated.View>
       </SafeAreaView>
     )
   }

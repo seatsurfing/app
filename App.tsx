@@ -10,7 +10,6 @@ import Home from './views/Home';
 import { Platform, ActivityIndicator, SafeAreaView } from 'react-native';
 import Search from './views/Search';
 import SelectLocation from './views/SelectLocation';
-import SearchResult from './views/SearchResult';
 import MyBookings from './views/MyBookings';
 import { AuthContext, AuthContextData } from './types/AuthContextData';
 import { Styles } from './types/Styles';
@@ -20,6 +19,7 @@ import { withTranslation } from 'react-i18next';
 import { i18n } from 'i18next';
 import About from './views/About';
 import AjaxConfigReactNativePersister from './types/AjaxConfigReactNativePersister';
+import 'react-native-gesture-handler';
 
 enableScreens();
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -132,9 +132,8 @@ class App extends React.Component<Props, AuthContextData> {
               </>
             ) : (
               <>
-                <Stack.Screen name="Search" component={Search} options={{title: "Seatsurfing", headerLargeTitle: true}} />
+                <Stack.Screen name="Search" component={Search} options={{headerShown: false}} />
                 <Stack.Screen name="SelectLocation" component={SelectLocation} options={{title: this.props.i18n.t("area")}} />
-                <Stack.Screen name="SearchResult" component={SearchResult} options={{title: this.props.i18n.t("selectSpace")}} />
                 <Stack.Screen name="MyBookings" component={MyBookings} options={{title: this.props.i18n.t("myBookings")}} />
                 <Stack.Screen name="About" component={About} options={{title: this.props.i18n.t("about")}} />
               </>
