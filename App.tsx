@@ -20,12 +20,13 @@ import { i18n } from 'i18next';
 import About from './views/About';
 import AjaxConfigReactNativePersister from './types/AjaxConfigReactNativePersister';
 import 'react-native-gesture-handler';
+import RuntimeInfo from './types/RuntimeInfo';
 
 enableScreens();
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 // Workaround for issue "DateTimePicker not working on Android"
-if (Platform.OS === 'android') {
+if (RuntimeInfo.isAndroid()) {
   Intl.__disableRegExpRestore();
 }
 

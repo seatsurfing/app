@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, View, Platform, TouchableOpacity, ScrollView, ImageBackground, StyleSheet, ActivityIndicator, Animated, FlatList } from 'react-native';
+import { Text, View, Platform, TouchableOpacity, ImageBackground, StyleSheet, ActivityIndicator, Animated, FlatList } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Styles, PrimaryTextSize, CaptionTextSize } from '../types/Styles';
 import DateTimePicker, { Event } from '@react-native-community/datetimepicker';
@@ -10,10 +10,11 @@ import { withTranslation } from 'react-i18next';
 import { i18n } from 'i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/build/Ionicons';
-import { PanGestureHandler, State as GestureState } from 'react-native-gesture-handler';
+import { PanGestureHandler, State as GestureState, ScrollView } from 'react-native-gesture-handler';
 import { Picker } from '@react-native-picker/picker';
 import ModalDialog from './ModalDialog';
 import ErrorText from '../types/ErrorText';
+import RuntimeInfo from '../types/RuntimeInfo';
 
 interface Props {
   navigation: StackNavigationProp<RootStackParamList>
@@ -131,7 +132,7 @@ class Search extends React.Component<Props, State> {
         this.loadSpaces(this.state.locationId),
       ];
       Promise.all(promises).then(() => {
-        this.setState({loading: false});
+        this.setState({ loading: false });
       });
     }
   }
@@ -211,7 +212,7 @@ class Search extends React.Component<Props, State> {
   }
 
   loadMap = async (locationId: string) => {
-    this.setState({loading: true});
+    this.setState({ loading: true });
     return Location.get(locationId).then(location => {
       return this.loadSpaces(location.id).then(() => {
         return Ajax.get(location.getMapUrl()).then(mapData => {
@@ -231,7 +232,7 @@ class Search extends React.Component<Props, State> {
   }
 
   loadSpaces = async (locationId: string) => {
-    this.setState({loading: true});
+    this.setState({ loading: true });
     return Space.listAvailability(locationId, this.state.enter, this.state.leave).then(list => {
       this.data = list;
     });
@@ -395,7 +396,7 @@ class Search extends React.Component<Props, State> {
       this.setState({ showEnterPicker: false });
     } else {
       this.setState({
-        enterMode: (Platform.OS === "ios" && !this.context.dailyBasisBooking) ? "datetime" : "date",
+        enterMode: (RuntimeInfo.isIOS() && !this.context.dailyBasisBooking) ? "datetime" : "date",
         showEnterPicker: true
       });
     }
@@ -406,24 +407,30 @@ class Search extends React.Component<Props, State> {
       this.setState({ showLeavePicker: false });
     } else {
       this.setState({
-        leaveMode: (Platform.OS === "ios" && !this.context.dailyBasisBooking) ? "datetime" : "date",
+        leaveMode: (RuntimeInfo.isIOS() && !this.context.dailyBasisBooking) ? "datetime" : "date",
         showLeavePicker: true
       });
     }
   }
 
   setEnterDate = (event: Event, selectedDate?: Date) => {
+    if (selectedDate === undefined) {
+      this.setState({
+        showEnterPicker: false
+      });
+      return;
+    }
     let dateChangedCb = () => {
       this.updateCanSearch().then(() => {
         if (!this.state.canSearch) {
-          this.setState({loading: false});
+          this.setState({ loading: false });
         } else {
           let promises = [
             this.initCurrentBookingCount(),
             this.loadSpaces(this.state.locationId),
           ];
           Promise.all(promises).then(() => {
-            this.setState({loading: false});
+            this.setState({ loading: false });
           });
         }
       });
@@ -463,17 +470,23 @@ class Search extends React.Component<Props, State> {
   }
 
   setLeaveDate = (event: Event, selectedDate?: Date) => {
+    if (selectedDate === undefined) {
+      this.setState({
+        showLeavePicker: false
+      });
+      return;
+    }
     let dateChangedCb = () => {
       this.updateCanSearch().then(() => {
         if (!this.state.canSearch) {
-          this.setState({loading: false});
+          this.setState({ loading: false });
         } else {
           let promises = [
             this.initCurrentBookingCount(),
             this.loadSpaces(this.state.locationId),
           ];
           Promise.all(promises).then(() => {
-            this.setState({loading: false});
+            this.setState({ loading: false });
           });
         }
       });
@@ -632,11 +645,11 @@ class Search extends React.Component<Props, State> {
         <>
           <View style={{ flexDirection: "row" }}>
             <Ionicons name="enter-outline" size={16} color="#555" />
-            <Text style={{marginLeft: 5}}>{Formatting.getFormatterNoTime().format(booking.enter)}</Text>
+            <Text style={{ marginLeft: 5 }}>{Formatting.getFormatterNoTime().format(booking.enter)}</Text>
           </View>
           <View style={{ flexDirection: "row" }}>
             <Ionicons name="exit-outline" size={16} color="#555" />
-            <Text style={{marginLeft: 5}}>{Formatting.getFormatterNoTime().format(booking.leave)}</Text>
+            <Text style={{ marginLeft: 5 }}>{Formatting.getFormatterNoTime().format(booking.leave)}</Text>
           </View>
         </>
       );
@@ -645,20 +658,20 @@ class Search extends React.Component<Props, State> {
         <>
           <View style={{ flexDirection: "row" }}>
             <Ionicons name="enter-outline" size={16} color="#555" />
-            <Text style={{marginLeft: 5}}>{Formatting.getFormatter().format(booking.enter)}</Text>
+            <Text style={{ marginLeft: 5 }}>{Formatting.getFormatter().format(booking.enter)}</Text>
           </View>
           <View style={{ flexDirection: "row" }}>
             <Ionicons name="exit-outline" size={16} color="#555" />
-            <Text style={{marginLeft: 5}}>{Formatting.getFormatter().format(booking.leave)}</Text>
+            <Text style={{ marginLeft: 5 }}>{Formatting.getFormatter().format(booking.leave)}</Text>
           </View>
         </>
       );
     }
     return (
-      <View key={booking.user.id} style={{marginTop: 10}}>
+      <View key={booking.user.id} style={{ marginTop: 10 }}>
         <View style={{ flexDirection: "row" }}>
           <Ionicons name="person-outline" size={16} color="#555" />
-          <Text style={{marginLeft: 5}}>{booking.user.email}</Text>
+          <Text style={{ marginLeft: 5 }}>{booking.user.email}</Text>
         </View>
         {times}
       </View>
@@ -764,15 +777,29 @@ class Search extends React.Component<Props, State> {
         <FlatList data={this.data} renderItem={({ item }) => this.renderListItem(item)} keyExtractor={item => item.id} style={Styles.list} />
       );
     } else {
-      listOrMap = (
-        <ScrollView contentOffset={{ x: this.state.mapOffsetX, y: this.state.mapOffsetY }} contentContainerStyle={{ width: this.state.style.container.width }}>
-          <View style={this.state.style.container}>
-            <ImageBackground style={Styles.mapImg} source={{ uri: this.mapData }}>
-              {this.data.map((item) => this.renderItem(item))}
-            </ImageBackground>
-          </View>
-        </ScrollView>
-      );
+      if (RuntimeInfo.isIOS()) {
+        listOrMap = (
+          <ScrollView contentOffset={{ x: this.state.mapOffsetX, y: this.state.mapOffsetY }} contentContainerStyle={{ width: this.state.style.container.width }} nestedScrollEnabled={true}>
+            <View style={this.state.style.container}>
+              <ImageBackground style={Styles.mapImg} source={{ uri: this.mapData }}>
+                {this.data.map((item) => this.renderItem(item))}
+              </ImageBackground>
+            </View>
+          </ScrollView>
+        );
+      } else {
+        listOrMap = (
+          <ScrollView contentOffset={{ x: 0, y: this.state.mapOffsetY }}>
+            <ScrollView contentOffset={{ x: this.state.mapOffsetX, y: 0 }} nestedScrollEnabled={true} horizontal={true}>
+              <View style={this.state.style.container}>
+                <ImageBackground style={Styles.mapImg} source={{ uri: this.mapData }}>
+                  {this.data.map((item) => this.renderItem(item))}
+                </ImageBackground>
+              </View>
+            </ScrollView>
+          </ScrollView>
+        );
+      }
     }
 
     let staticContent = <></>
@@ -806,12 +833,21 @@ class Search extends React.Component<Props, State> {
           </>
         );
       }
-      formContent = (
-        <ScrollView style={style.footerContent}>
-          <View>
-            <Text style={Styles.sectionHeader}>{this.props.i18n.t("bookSeat")}</Text>
-          </View>
-          <View style={Styles.section}>
+      let locationPicker = <></>
+      if (RuntimeInfo.isAndroid()) {
+        locationPicker = (
+          <>
+            <View style={Styles.tableRow}>
+              <Ionicons name="location-outline" size={20} color="#555" />
+              <Picker selectedValue={this.state.locationId} onValueChange={(id) => this.changeLocation(id)} style={Styles.pickerTable}>
+                {this.locations.map(location => <Picker.Item key={location.id} label={location.name} value={location.id} />)}
+              </Picker>
+            </View>
+          </>
+        );
+      } else {
+        locationPicker = (
+          <>
             <View style={Styles.tableRow}>
               <Ionicons name="location-outline" size={20} color="#555" />
               <Text style={Styles.textTableValue} onPress={() => this.startLocationPicking()}>{this.getLocationName()}</Text>
@@ -821,6 +857,16 @@ class Search extends React.Component<Props, State> {
                 {this.locations.map(location => <Picker.Item key={location.id} label={location.name} value={location.id} />)}
               </Picker>
             )}
+          </>
+        );
+      }
+      formContent = (
+        <ScrollView style={style.footerContent}>
+          <View>
+            <Text style={Styles.sectionHeader}>{this.props.i18n.t("bookSeat")}</Text>
+          </View>
+          <View style={Styles.section}>
+            {locationPicker}
             <View style={Styles.horizontalLine}></View>
             <View style={Styles.tableRow}>
               <Ionicons name="enter-outline" size={20} color="#555" />

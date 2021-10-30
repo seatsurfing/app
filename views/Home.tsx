@@ -12,6 +12,7 @@ import { withTranslation } from 'react-i18next';
 import { i18n } from 'i18next';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
+import RuntimeInfo from '../types/RuntimeInfo';
 
 interface Props {
   navigation: StackNavigationProp<RootStackParamList>
@@ -300,7 +301,7 @@ class Home extends React.Component<Props, State> {
       }
       return (
         <SafeAreaView style={Styles.containerCenter}>
-          <KeyboardAvoidingView contentContainerStyle={Styles.containerCenter} behavior={Platform.OS == "ios" ? "padding" : "height"}>
+          <KeyboardAvoidingView contentContainerStyle={Styles.containerCenter} behavior={RuntimeInfo.isIOS() ? "padding" : "height"}>
             <TouchableOpacity style={style.backLinkTopLeft} onPress={() => this.setState({ invalid: false, requirePassword: false, providers: null, loading: false })}>
               <Ionicons name="chevron-back-outline" size={20} color="#555" />
               <Text style={Styles.grayLink}>{this.props.i18n.t("back")}</Text>
@@ -332,7 +333,7 @@ class Home extends React.Component<Props, State> {
       }
       return (
         <SafeAreaView style={Styles.containerCenter}>
-          <KeyboardAvoidingView contentContainerStyle={Styles.containerCenter} behavior={Platform.OS == "ios" ? "padding" : "height"}>
+          <KeyboardAvoidingView contentContainerStyle={Styles.containerCenter} behavior={RuntimeInfo.isIOS() ? "padding" : "height"}>
             <TouchableOpacity style={style.backLinkTopLeft} onPress={() => this.setState({ invalid: false, requirePassword: false, providers: null, loading: false })}>
               <Ionicons name="chevron-back-outline" size={20} color="#555" />
               <Text style={Styles.grayLink}>{this.props.i18n.t("back")}</Text>
@@ -353,7 +354,7 @@ class Home extends React.Component<Props, State> {
     }
     return (
       <SafeAreaView style={Styles.container}>
-        <KeyboardAvoidingView style={Styles.container} behavior={Platform.OS == "ios" ? "padding" : "height"}>
+        <KeyboardAvoidingView style={Styles.container} behavior={RuntimeInfo.isIOS() ? "padding" : "height"}>
           <ScrollView contentContainerStyle={Styles.scrollViewCenter}>
             <View style={Styles.growMax}></View>
             <Image source={require("../assets/logo.png")} style={style.logo} />

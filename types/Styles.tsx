@@ -130,6 +130,14 @@ export const Styles = StyleSheet.create({
       overflow: "hidden",
       maxWidth: 250
     },
+    pickerTable: {
+      width: "75%",
+      textAlign: "right",
+      fontSize: PrimaryTextSize,
+      color: "gray",
+      position: "absolute",
+      right: 25,
+    },
     horizontalLine: {
       height: 1,
       backgroundColor: "silver",
