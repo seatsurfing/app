@@ -184,6 +184,8 @@ class Search extends React.Component<Props, State> {
         enter.setHours(0, 0, 0);
         let leave = new Date(enter);
         leave.setHours(23, 59, 59);
+        console.log(enter.toString());
+        console.log(leave.toString());
         this.setState({
           enter: enter,
           leave: leave
@@ -517,16 +519,16 @@ class Search extends React.Component<Props, State> {
 
   formatDateTime = (date: Date) => {
     if (this.context.dailyBasisBooking) {
-      return Formatting.getFormatterNoTime().format(date);
+      return Formatting.getFormatterNoTime(true).format(date);
     }
-    return Formatting.getFormatter().format(date);
+    return Formatting.getFormatter(true).format(date);
   }
 
   formatDateTimeShort = (date: Date) => {
     if (this.context.dailyBasisBooking) {
-      return Formatting.getFormatterNoTime().format(date);
+      return Formatting.getFormatterNoTime(true).format(date);
     }
-    return Formatting.getFormatterShort().format(date);
+    return Formatting.getFormatterShort(true).format(date);
   }
 
   logout = async () => {
