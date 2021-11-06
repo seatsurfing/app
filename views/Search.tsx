@@ -618,14 +618,15 @@ class Search extends React.Component<Props, State> {
     booking.leave = new Date(this.state.leave);
     booking.space = this.state.selectedSpace;
     booking.save().then(() => {
-      this.setState({
-        loading: false,
-        showSuccess: true
+      this.loadSpaces(this.state.locationId).then(() => {
+          this.setState({
+            loading: false,
+            showSuccess: true
+          });
+          setTimeout(() => {
+            this.setState({ showSuccess: false });
+          }, 5000);
       });
-      this.loadMap(this.state.locationId);
-      setTimeout(() => {
-        this.setState({ showSuccess: false });
-      }, 5000);
     }).catch(e => {
       let code: number = 0;
       if (e instanceof AjaxError) {
