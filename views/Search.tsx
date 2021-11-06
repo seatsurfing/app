@@ -60,6 +60,7 @@ class Search extends React.Component<Props, State> {
   footerHeight: Animated.Value
   footerHeightValue: number
   containerHeight: number
+  containerWidth: number
 
   constructor(props: Props) {
     super(props);
@@ -71,6 +72,7 @@ class Search extends React.Component<Props, State> {
     this.footerHeight.addListener(this.onFooterHeightChange);
     this.footerHeightValue = Search.footerHeightCollapsed;
     this.containerHeight = 0;
+    this.containerWidth = 0;
     this.state = {
       loading: true,
       style: StyleSheet.create({
@@ -146,8 +148,8 @@ class Search extends React.Component<Props, State> {
 
   centerMapView = () => {
     this.setState({
-      mapOffsetX: this.state.style.container.width / 2,
-      mapOffsetY: this.state.style.container.height / 2,
+      mapOffsetX: this.state.style.container.width / 2 - (this.containerWidth / 2),
+      mapOffsetY: this.state.style.container.height / 2 - (this.containerHeight / 2),
     });
   }
 
@@ -569,6 +571,7 @@ class Search extends React.Component<Props, State> {
   onContainerLayout = (e: any) => {
     if (e && e.nativeEvent && e.nativeEvent.layout) {
       this.containerHeight = e.nativeEvent.layout.height;
+      this.containerWidth = e.nativeEvent.layout.width;
     }
   }
 
