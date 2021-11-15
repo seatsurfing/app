@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, View, Platform, TouchableOpacity, ImageBackground, StyleSheet, ActivityIndicator, Animated, FlatList } from 'react-native';
+import { Text, View, TouchableOpacity, ImageBackground, StyleSheet, ActivityIndicator, Animated, FlatList, Pressable } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Styles, PrimaryTextSize, CaptionTextSize } from '../types/Styles';
 import DateTimePicker, { Event } from '@react-native-community/datetimepicker';
@@ -46,6 +46,8 @@ interface State {
   listView: boolean
   mapOffsetX: number
   mapOffsetY: number
+  footerHeight: Animated.Value
+  footerHeightValue: number
 }
 
 class Search extends React.Component<Props, State> {
@@ -57,8 +59,8 @@ class Search extends React.Component<Props, State> {
   mapData: string;
   curBookingCount: number = 0;
   mapOverlayOpacity: Animated.Value
-  footerHeight: Animated.Value
-  footerHeightValue: number
+  //footerHeight: Animated.Value
+  //footerHeightValue: number
   containerHeight: number
   containerWidth: number
 
@@ -68,9 +70,9 @@ class Search extends React.Component<Props, State> {
     this.locations = [];
     this.mapData = "";
     this.mapOverlayOpacity = new Animated.Value(0);
-    this.footerHeight = new Animated.Value(Search.footerHeightCollapsed);
-    this.footerHeight.addListener(this.onFooterHeightChange);
-    this.footerHeightValue = Search.footerHeightCollapsed;
+    //this.footerHeight = new Animated.Value(Search.footerHeightCollapsed);
+    //this.footerHeight.addListener(this.onFooterHeightChange);
+    //this.footerHeightValue = Search.footerHeightCollapsed;
     this.containerHeight = 0;
     this.containerWidth = 0;
     this.state = {
@@ -102,8 +104,11 @@ class Search extends React.Component<Props, State> {
       listView: false,
       mapOffsetX: 0,
       mapOffsetY: 0,
+      footerHeight: new Animated.Value(Search.footerHeightCollapsed),
+      footerHeightValue: Search.footerHeightCollapsed,
     }
     this.props.navigation.addListener("focus", this.onNavigationFocus);
+    this.state.footerHeight.addListener(this.onFooterHeightChange);
   }
 
   componentDidMount = () => {
@@ -125,6 +130,7 @@ class Search extends React.Component<Props, State> {
 
   componentWillUnmount = () => {
     this.props.navigation.removeListener("focus", this.onNavigationFocus);
+    this.state.footerHeight.removeAllListeners();
   }
 
   onNavigationFocus = () => {
@@ -155,12 +161,11 @@ class Search extends React.Component<Props, State> {
 
   onFooterHeightChange = (e: any) => {
     if (e) {
-      this.footerHeightValue = e.value;
+      this.setState({ footerHeightValue: e.value });
     }
   }
 
   initDates = () => {
-    console.log("initializating date selectors...");
     let now = new Date();
     if (now.getHours() > 17) {
       let enter = new Date();
@@ -186,8 +191,6 @@ class Search extends React.Component<Props, State> {
         enter.setHours(0, 0, 0);
         let leave = new Date(enter);
         leave.setHours(23, 59, 59);
-        console.log(enter.toString());
-        console.log(leave.toString());
         this.setState({
           enter: enter,
           leave: leave
@@ -248,11 +251,14 @@ class Search extends React.Component<Props, State> {
         selectedSpace: item,
         showConfirm: true
       });
-    } else if (!item.available && item.bookings && item.bookings.length > 0) {
-      this.setState({
-        showBookingNames: true,
-        selectedSpace: item
-      });
+    } else {
+      let bookings = Booking.createFromRawArray(item.rawBookings);
+      if (!item.available && bookings && bookings.length > 0) {
+        this.setState({
+          showBookingNames: true,
+          selectedSpace: item
+        });
+      }
     }
   }
 
@@ -309,37 +315,61 @@ class Search extends React.Component<Props, State> {
 
   onFooterStateChange = (e: any) => {
     if (e && e.nativeEvent && e.nativeEvent.state === GestureState.END) {
-      if (this.state.minDragOffset < 0) {
-        // Drag up
-        this.setState({
-          minDragOffset: Search.dragOffset,
-        });
-        Animated.timing(this.footerHeight, {
-          toValue: this.containerHeight * 0.8,
-          duration: 250,
-          useNativeDriver: false,
-        }).start();
-        this.showMapOverlay();
-      } else {
-        // Drag down
-        this.setState({
-          minDragOffset: -1 * Search.dragOffset,
-        });
-        Animated.timing(this.footerHeight, {
-          toValue: Search.footerHeightCollapsed,
-          duration: 250,
-          useNativeDriver: false,
-        }).start();
-        this.hideMapOverlay();
-      }
+      this.toggleFooter();
+    }
+  }
+
+  toggleFooter = () => {
+    if (this.state.minDragOffset < 0) {
+      this.maximizeFooter();
+    } else {
+      this.minimizeFooter();
+    }
+  }
+
+  maximizeFooter = () => {
+    this.showMapOverlay();
+    this.setState({
+      minDragOffset: Search.dragOffset,
+    });
+    if (RuntimeInfo.isIOS()) {
+      Animated.timing(this.state.footerHeight, {
+        toValue: this.containerHeight * 0.8,
+        duration: 250,
+        useNativeDriver: false,
+      }).start();
+    } else {
+      this.setState({
+        footerHeight: new Animated.Value(this.containerHeight * 0.8),
+        footerHeightValue: this.containerHeight * 0.8,
+      });
+    }
+  }
+
+  minimizeFooter = () => {
+    this.hideMapOverlay();
+    this.setState({
+      minDragOffset: -1 * Search.dragOffset,
+    });
+    if (RuntimeInfo.isIOS()) {
+      Animated.timing(this.state.footerHeight, {
+        toValue: Search.footerHeightCollapsed,
+        duration: (RuntimeInfo.isIOS() ? 250 : 1),
+        useNativeDriver: false,
+      }).start();
+    } else {
+      this.setState({
+        footerHeight: new Animated.Value(Search.footerHeightCollapsed),
+        footerHeightValue: Search.footerHeightCollapsed,
+      });
     }
   }
 
   onFooterGestureEvent = (e: any) => {
     if (e && e.nativeEvent) {
-      Animated.timing(this.footerHeight, {
-        toValue: (-1 * e.nativeEvent.y + this.footerHeightValue),
-        duration: 1,
+      Animated.timing(this.state.footerHeight, {
+        toValue: (-1 * e.nativeEvent.y + this.state.footerHeightValue),
+        duration: 0,
         useNativeDriver: false,
       }).start();
     }
@@ -619,13 +649,13 @@ class Search extends React.Component<Props, State> {
     booking.space = this.state.selectedSpace;
     booking.save().then(() => {
       this.loadSpaces(this.state.locationId).then(() => {
-          this.setState({
-            loading: false,
-            showSuccess: true
-          });
-          setTimeout(() => {
-            this.setState({ showSuccess: false });
-          }, 5000);
+        this.setState({
+          loading: false,
+          showSuccess: true
+        });
+        setTimeout(() => {
+          this.setState({ showSuccess: false });
+        }, 5000);
       });
     }).catch(e => {
       let code: number = 0;
@@ -644,7 +674,6 @@ class Search extends React.Component<Props, State> {
   }
 
   renderBookingNameRow = (booking: Booking) => {
-    console.log(booking.enter);
     let times = <></>
     if (this.context.dailyBasisBooking) {
       times = (
@@ -923,7 +952,7 @@ class Search extends React.Component<Props, State> {
     let mapContainer = <></>
     if (this.state.loading) {
       mapContainer = (
-        <ActivityIndicator size="large" style={Styles.activityIndicator} />
+        <ActivityIndicator size="large" style={Styles.activityIndicator} color="#555" />
       );
     } else {
       if (this.state.locationId) {
@@ -950,12 +979,41 @@ class Search extends React.Component<Props, State> {
       </ModalDialog>
     );
 
+    let bookings: Booking[] = [];
+    if (this.state.selectedSpace) {
+      bookings = Booking.createFromRawArray(this.state.selectedSpace.rawBookings);
+    }
     let bookingNamesModal = (
       <ModalDialog visible={this.state.showBookingNames} buttons={[{ label: this.props.i18n.t("ok"), onPress: () => { this.setState({ showBookingNames: false }) } }]}>
         <Text style={Styles.subject}>{this.state.selectedSpace?.name}</Text>
-        {this.state.selectedSpace?.bookings.map(booking => this.renderBookingNameRow(booking))}
+        {bookings.map(booking => this.renderBookingNameRow(booking))}
       </ModalDialog>
     );
+
+    let dragArea = <></>;
+    if (RuntimeInfo.isIOS()) {
+      dragArea = (
+        <Animated.View style={[style.footerNav, { height: this.state.footerHeight }]}>
+          <PanGestureHandler onHandlerStateChange={this.onFooterStateChange} onGestureEvent={this.onFooterGestureEvent} activeOffsetY={this.state.minDragOffset}>
+            <View style={style.dragArea}>
+              <View style={style.dragger}></View>
+            </View>
+          </PanGestureHandler>
+          {staticContent}
+          {formContent}
+        </Animated.View>
+      );
+    } else {
+      dragArea = (
+        <View style={[style.footerNav, { height: this.state.footerHeightValue }]}>
+          <Pressable style={style.dragArea} onPress={this.toggleFooter}>
+            <Ionicons name={this.state.minDragOffset < 0 ? "caret-up-outline" : "caret-down-outline"} size={16} color="#555" />
+          </Pressable>
+          {staticContent}
+          {formContent}
+        </View>
+      );
+    }
 
     return (
       <SafeAreaView style={Styles.container} edges={['right', 'top', 'left']} onLayout={this.onContainerLayout}>
@@ -973,15 +1031,7 @@ class Search extends React.Component<Props, State> {
           {mapContainer}
           {overlay}
         </View>
-        <Animated.View style={[style.footerNav, { height: this.footerHeight }]}>
-          <PanGestureHandler onHandlerStateChange={this.onFooterStateChange} onGestureEvent={this.onFooterGestureEvent} activeOffsetY={this.state.minDragOffset}>
-            <View style={style.dragArea}>
-              <View style={style.dragger}></View>
-            </View>
-          </PanGestureHandler>
-          {staticContent}
-          {formContent}
-        </Animated.View>
+        {dragArea}
       </SafeAreaView>
     )
   }

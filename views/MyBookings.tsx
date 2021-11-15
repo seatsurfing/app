@@ -79,7 +79,7 @@ class MyBookings extends React.Component<Props, State> {
     let infoModal;
     let list;
     if (this.state.loading) {
-      loadingIndicator = <ActivityIndicator size="large" style={Styles.activityIndicator} />;
+      loadingIndicator = <ActivityIndicator size="large" style={Styles.activityIndicator} color="#555" />;
     }
     if (this.state.selectedItem) {
       let buttons = [

@@ -5,9 +5,9 @@ import React from 'react';
 import './types/i18n';
 import { NavigationContainer } from '@react-navigation/native';
 import { enableScreens } from 'react-native-screens';
-import { createNativeStackNavigator } from 'react-native-screens/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Home from './views/Home';
-import { Platform, ActivityIndicator, SafeAreaView } from 'react-native';
+import { ActivityIndicator, SafeAreaView } from 'react-native';
 import Search from './views/Search';
 import SelectLocation from './views/SelectLocation';
 import MyBookings from './views/MyBookings';
@@ -57,7 +57,6 @@ class App extends React.Component<Props, AuthContextData> {
 
   loadSettings = async () => {
     if (Ajax.CREDENTIALS.accessToken) {
-      console.log("loading settings...");
       return OrgSettings.list().then(settings => {
         let state: any = {};
         settings.forEach(s => {
@@ -72,7 +71,6 @@ class App extends React.Component<Props, AuthContextData> {
           ...this.state,
           ...state
         });
-        console.log("settings loaded");
       });
     }
   }
@@ -91,8 +89,7 @@ class App extends React.Component<Props, AuthContextData> {
     }
     if (Ajax.URL && Ajax.CREDENTIALS.accessToken) {
       User.getSelf().then(user => {
-        this.loadSettings().then(() => {
-          this.setDetails(user.email);
+        this.setDetails(user.email).then(() => {
           this.setState({isLoading: false});
         });
       }).catch((e) => {
@@ -106,19 +103,25 @@ class App extends React.Component<Props, AuthContextData> {
     }
   }
 
-  setDetails = (username: string) => {
-    this.loadSettings().then(() => {
-      this.setState({
-        username: username
-      });
+  setDetails = async (username: string): Promise<void> => {
+    let loading = this.state.isLoading;
+    this.setState({isLoading: true});
+    let self = this;
+    return new Promise<void>(function (resolve, reject) {
+      self.loadSettings().then(() => {
+        self.setState({
+          username: username,
+          isLoading: loading,
+        }, () => resolve());
+      }).catch(() => reject());
     });
   }
 
   render() {
     if (this.state.isLoading) {
       return (
-        <SafeAreaView style={Styles.container}>
-          <ActivityIndicator size="large" style={Styles.activityIndicator} />
+        <SafeAreaView style={Styles.containerCenter}>
+          <ActivityIndicator size="large" style={Styles.activityIndicator} color="#555" />
         </SafeAreaView>
       );
     }

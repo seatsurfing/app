@@ -60,7 +60,7 @@ export default class SelectLocation extends React.Component<Props, State> {
     return(
       <SafeAreaView style={Styles.container}>
         {this.state.loading ?
-          <ActivityIndicator size="large" style={Styles.activityIndicator} />
+          <ActivityIndicator size="large" style={Styles.activityIndicator} color="#555" />
         :
           <FlatList data={this.state.locations} renderItem={({item}) => this.renderItem(item)} keyExtractor={item => item.id} style={Styles.list} />
         }

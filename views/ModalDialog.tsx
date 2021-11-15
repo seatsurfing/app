@@ -23,7 +23,7 @@ export default class ModalDialog extends React.Component<Props, State> {
             buttons = (
                 <View style={Styles.mapOverlayFooter}>
                     {this.props.buttons.map((button, i) => (
-                        <Pressable onPress={() => button.onPress()} style={[Styles.mapOverlayFooterButton, {borderRightWidth: (i+1 < numButtons ? 1 : 0), borderRightColor: "#555"}]}>
+                        <Pressable key={"modal-button-"+i} onPress={() => button.onPress()} style={[Styles.mapOverlayFooterButton, {borderRightWidth: (i+1 < numButtons ? 1 : 0), borderRightColor: "#555"}]}>
                             <Text style={Styles.mapOverlayFooterButtonText}>{button.label}</Text>
                         </Pressable>
                     ))}

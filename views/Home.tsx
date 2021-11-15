@@ -289,7 +289,7 @@ class Home extends React.Component<Props, State> {
     if (this.state.loading) {
       return (
         <SafeAreaView style={Styles.containerCenter}>
-          <ActivityIndicator size="large" style={Styles.activityIndicator} />
+          <ActivityIndicator size="large" style={Styles.activityIndicator} color="#555" />
         </SafeAreaView>
       );
     }
