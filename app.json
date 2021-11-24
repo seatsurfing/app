@@ -22,15 +22,15 @@
     "assetBundlePatterns": [
       "**/*"
     ],
-    "version": "1.7.3",
+    "version": "1.8.0",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "de.seatsurfing.ios",
-      "buildNumber": "1.7.3"
+      "buildNumber": "1.8.0"
     },
     "android": {
       "package": "de.seatsurfing.app",
-      "versionCode": 22,
+      "versionCode": 23,
       "permissions": []
     }
   }

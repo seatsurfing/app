@@ -138,6 +138,15 @@ export const Styles = StyleSheet.create({
       position: "absolute",
       right: 25,
     },
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    switchInTable: {
+      marginTop: -5,
+      position: "absolute",
+      right: 25,
+    },
     horizontalLine: {
       height: 1,
       backgroundColor: "silver",

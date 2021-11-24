@@ -3,7 +3,7 @@ import { Text, View, TouchableOpacity, ImageBackground, StyleSheet, ActivityIndi
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Styles, PrimaryTextSize, CaptionTextSize } from '../types/Styles';
 import DateTimePicker, { Event } from '@react-native-community/datetimepicker';
-import { Formatting, Location, Ajax, AjaxCredentials, Space, Booking, AjaxError } from '../commons';
+import { Formatting, Location, Ajax, AjaxCredentials, Space, Booking, AjaxError, UserPreference } from '../commons';
 import { RouteProp } from '@react-navigation/native';
 import { AuthContext } from '../types/AuthContextData';
 import { withTranslation } from 'react-i18next';
@@ -48,19 +48,26 @@ interface State {
   mapOffsetY: number
   footerHeight: Animated.Value
   footerHeightValue: number
+  prefEnterTime: number
+  prefWorkdayStart: number
+  prefWorkdayEnd: number
+  prefWorkdays: number[]
+  prefLocationId: string
 }
 
 class Search extends React.Component<Props, State> {
   static dragOffset = 25;
   static footerHeightCollapsed = 125;
   static contextType = AuthContext;
+  static PreferenceEnterTimeNow: number = 1;
+  static PreferenceEnterTimeNextDay: number = 2;
+  static PreferenceEnterTimeNextWorkday: number = 3;
+
   data: Space[];
   locations: Location[];
   mapData: string;
   curBookingCount: number = 0;
   mapOverlayOpacity: Animated.Value
-  //footerHeight: Animated.Value
-  //footerHeightValue: number
   containerHeight: number
   containerWidth: number
 
@@ -70,9 +77,6 @@ class Search extends React.Component<Props, State> {
     this.locations = [];
     this.mapData = "";
     this.mapOverlayOpacity = new Animated.Value(0);
-    //this.footerHeight = new Animated.Value(Search.footerHeightCollapsed);
-    //this.footerHeight.addListener(this.onFooterHeightChange);
-    //this.footerHeightValue = Search.footerHeightCollapsed;
     this.containerHeight = 0;
     this.containerWidth = 0;
     this.state = {
@@ -106,19 +110,33 @@ class Search extends React.Component<Props, State> {
       mapOffsetY: 0,
       footerHeight: new Animated.Value(Search.footerHeightCollapsed),
       footerHeightValue: Search.footerHeightCollapsed,
+      prefEnterTime: 0,
+      prefWorkdayStart: 0,
+      prefWorkdayEnd: 0,
+      prefWorkdays: [],
+      prefLocationId: "",
     }
     this.props.navigation.addListener("focus", this.onNavigationFocus);
     this.state.footerHeight.addListener(this.onFooterHeightChange);
   }
 
   componentDidMount = () => {
-    this.initDates();
     let promises = [
-      this.loadLocations()
+      this.loadLocations(),
+      this.loadPreferences(),
     ];
     Promise.all(promises).then(() => {
+      this.initDates();
       if (this.state.locationId === "" && this.locations.length > 0) {
-        this.setState({ locationId: this.locations[0].id });
+        let defaultLocationId = this.locations[0].id;
+        if (this.state.prefLocationId) {
+          this.locations.forEach(location => {
+            if (location.id === this.state.prefLocationId) {
+              defaultLocationId = this.state.prefLocationId;
+            }
+          })
+        }
+        this.setState({ locationId: defaultLocationId });
         this.loadMap(this.state.locationId).then(() => {
           this.setState({ loading: false });
         });
@@ -133,7 +151,34 @@ class Search extends React.Component<Props, State> {
     this.state.footerHeight.removeAllListeners();
   }
 
+  loadPreferences = async (): Promise<void> => {
+    let self = this;
+    return new Promise<void>(function (resolve, reject) {
+      UserPreference.list().then(list => {
+        let state: any = {};
+        list.forEach(s => {
+          if (s.name === "enter_time") state.prefEnterTime = window.parseInt(s.value);
+          if (s.name === "workday_start") state.prefWorkdayStart = window.parseInt(s.value);
+          if (s.name === "workday_end") state.prefWorkdayEnd = window.parseInt(s.value);
+          if (s.name === "workdays") state.prefWorkdays = s.value.split(",").map(val => window.parseInt(val));
+          if (s.name === "location_id") state.prefLocationId = s.value;
+        });
+        if (self.context.dailyBasisBooking) {
+          state.prefWorkdayStart = 0;
+          state.prefWorkdayEnd = 23;
+        }
+        self.setState({
+          ...state
+        }, () => resolve());
+      }).catch(e => reject(e));
+    });
+  }
+
   onNavigationFocus = () => {
+    this.loadPreferences().then(() => {
+      this.initDates();
+      this.updateCanSearch()
+    });
     if (this.state.locationId) {
       let promises = [
         this.initCurrentBookingCount(),
@@ -166,50 +211,51 @@ class Search extends React.Component<Props, State> {
   }
 
   initDates = () => {
-    let now = new Date();
-    if (now.getHours() > 17) {
-      let enter = new Date();
+    let enter = new Date();
+    if (this.state.prefEnterTime === Search.PreferenceEnterTimeNow) {
+      enter.setHours(enter.getHours() + 1, 0, 0);
+      if (enter.getHours() < this.state.prefWorkdayStart) {
+        enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
+      }
+      if (enter.getHours() >= this.state.prefWorkdayEnd) {
+        enter.setDate(enter.getDate() + 1);
+        enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
+      }
+    } else if (this.state.prefEnterTime === Search.PreferenceEnterTimeNextDay) {
       enter.setDate(enter.getDate() + 1);
-      if (this.context.dailyBasisBooking) {
-        enter.setHours(0, 0, 0);
-      } else {
-        enter.setHours(9, 0, 0);
-      }
-      let leave = new Date(enter);
-      if (this.context.dailyBasisBooking) {
-        leave.setHours(23, 59, 59);
-      } else {
-        leave.setHours(17, 0, 0);
-      }
-      this.setState({
-        enter: enter,
-        leave: leave
-      });
-    } else {
-      if (this.context.dailyBasisBooking) {
-        let enter = new Date();
-        enter.setHours(0, 0, 0);
-        let leave = new Date(enter);
-        leave.setHours(23, 59, 59);
-        this.setState({
-          enter: enter,
-          leave: leave
-        });
-      } else {
-        let enter = new Date();
-        enter.setHours(enter.getHours() + 1, 0, 0);
-        let leave = new Date(enter);
-        if (leave.getHours() < 17) {
-          leave.setHours(17, 0, 0);
+      enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
+    } else if (this.state.prefEnterTime === Search.PreferenceEnterTimeNextWorkday) {
+      enter.setDate(enter.getDate() + 1);
+      let add = 0;
+      let nextDayFound = false;
+      let lookFor = enter.getDay();
+      while (!nextDayFound) {
+        if (this.state.prefWorkdays.includes(lookFor) || add > 7) {
+          nextDayFound = true;
         } else {
-          leave.setHours(leave.getHours() + 1, 0, 0);
+          add++;
+          lookFor++;
+          if (lookFor > 6) {
+            lookFor = 0;
+          }
         }
-        this.setState({
-          enter: enter,
-          leave: leave
-        });
       }
+      enter.setDate(enter.getDate() + add);
+      enter.setHours(this.state.prefWorkdayStart, 0, 0, 0);
     }
+
+    let leave = new Date(enter);
+    leave.setHours(this.state.prefWorkdayEnd, 0, 0);
+
+    if (this.context.dailyBasisBooking) {
+      enter.setHours(0, 0, 0, 0);
+      leave.setHours(23, 59, 59, 0);
+    }
+
+    this.setState({
+      enter: enter,
+      leave: leave
+    });
   }
 
   loadLocations = async (): Promise<void> => {
@@ -935,6 +981,10 @@ class Search extends React.Component<Props, State> {
             <View style={Styles.tableRow}>
               <Ionicons name="person-outline" size={20} color="#555" />
               <Text style={Styles.textTableValue}>{this.context.username.toLowerCase()}</Text>
+            </View>
+            <View style={Styles.horizontalLine}></View>
+            <View style={Styles.tableRow}>
+              <TouchableOpacity onPress={() => this.props.navigation.navigate("Preferences")}><Text style={Styles.formButtom}>{this.props.i18n.t("preferences")}</Text></TouchableOpacity>
             </View>
             <View style={Styles.horizontalLine}></View>
             <View style={Styles.tableRow}>

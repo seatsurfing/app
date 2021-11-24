@@ -21,6 +21,7 @@ import About from './views/About';
 import AjaxConfigReactNativePersister from './types/AjaxConfigReactNativePersister';
 import 'react-native-gesture-handler';
 import RuntimeInfo from './types/RuntimeInfo';
+import Preferences from './views/Preferences';
 
 enableScreens();
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -139,6 +140,7 @@ class App extends React.Component<Props, AuthContextData> {
                 <Stack.Screen name="Search" component={Search} options={{headerShown: false}} />
                 <Stack.Screen name="SelectLocation" component={SelectLocation} options={{title: this.props.i18n.t("area")}} />
                 <Stack.Screen name="MyBookings" component={MyBookings} options={{title: this.props.i18n.t("myBookings")}} />
+                <Stack.Screen name="Preferences" component={Preferences} options={{title: this.props.i18n.t("preferences")}} />
                 <Stack.Screen name="About" component={About} options={{title: this.props.i18n.t("about")}} />
               </>
             )}
