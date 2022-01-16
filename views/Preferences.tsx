@@ -228,7 +228,7 @@ class Preferences extends React.Component<Props, State> {
           </View>
           <View style={Styles.section}>
             {[...Array(7).keys()].map(day => (
-              <>
+              <React.Fragment key={"day-toggler-" + day}>
                 <View style={Styles.tableRow}>
                   <Text style={Styles.text}>{this.props.i18n.t("workday-" + day)}</Text>
                   <View style={Styles.switchInTable}>
@@ -236,7 +236,7 @@ class Preferences extends React.Component<Props, State> {
                   </View>
                 </View>
                 {day < 6 && <View style={Styles.horizontalLine}></View>}
-              </>
+              </React.Fragment>
             ))}
           </View>
         </ScrollView >
