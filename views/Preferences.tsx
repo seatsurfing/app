@@ -1,11 +1,8 @@
 import React from 'react';
-import { Text, SafeAreaView, TouchableOpacity, ActivityIndicator, Button, View, StyleSheet, ScrollView, Switch } from 'react-native';
+import { Text, SafeAreaView, ActivityIndicator, View, ScrollView, Switch } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Styles } from '../types/Styles';
-import { FlatList } from 'react-native-gesture-handler';
-import { Booking, UserPreference, Location } from '../commons';
-import { Formatting } from '../commons';
-import ModalDialog from './ModalDialog';
+import { UserPreference, Location } from '../commons';
 import { withTranslation } from 'react-i18next';
 import { i18n } from 'i18next';
 import { Picker } from '@react-native-picker/picker';

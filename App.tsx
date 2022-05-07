@@ -1,4 +1,3 @@
-import 'react-native-gesture-handler';
 import 'intl';
 import 'intl/locale-data/jsonp/de';
 import React from 'react';
@@ -19,7 +18,6 @@ import { withTranslation } from 'react-i18next';
 import { i18n } from 'i18next';
 import About from './views/About';
 import AjaxConfigReactNativePersister from './types/AjaxConfigReactNativePersister';
-import 'react-native-gesture-handler';
 import RuntimeInfo from './types/RuntimeInfo';
 import Preferences from './views/Preferences';
 

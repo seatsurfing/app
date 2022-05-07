@@ -1,8 +1,7 @@
 import React from 'react';
-import { Text, SafeAreaView, TouchableOpacity, Linking } from 'react-native';
+import { Text, SafeAreaView, TouchableOpacity, Linking, ScrollView } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Styles } from '../types/Styles';
-import { ScrollView } from 'react-native-gesture-handler';
 import { withTranslation } from 'react-i18next';
 import { i18n } from 'i18next';
 

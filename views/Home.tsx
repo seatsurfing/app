@@ -1,8 +1,7 @@
 import React from 'react';
-import { View, StyleSheet, Text, ActivityIndicator, Image, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, ActivityIndicator, Image, KeyboardAvoidingView, Platform, TouchableOpacity, TouchableHighlight, ScrollView, TextInput } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Styles, PrimaryTextSize } from '../types/Styles';
-import { TouchableHighlight, TextInput, ScrollView } from 'react-native-gesture-handler';
 import * as WebBrowser from 'expo-web-browser';
 import { Ajax, Organization, AuthProvider, AjaxCredentials } from '../commons';
 import { AuthContext } from '../types/AuthContextData';

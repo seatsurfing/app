@@ -2,7 +2,7 @@ import React from 'react';
 import { Text, View, TouchableOpacity, ImageBackground, StyleSheet, ActivityIndicator, Animated, FlatList, Pressable } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Styles, PrimaryTextSize, CaptionTextSize } from '../types/Styles';
-import DateTimePicker, { Event } from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerEvent, Event } from '@react-native-community/datetimepicker';
 import { Formatting, Location, Ajax, AjaxCredentials, Space, Booking, AjaxError, UserPreference } from '../commons';
 import { RouteProp } from '@react-navigation/native';
 import { AuthContext } from '../types/AuthContextData';
@@ -10,7 +10,7 @@ import { withTranslation } from 'react-i18next';
 import { i18n } from 'i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/build/Ionicons';
-import { PanGestureHandler, State as GestureState, ScrollView } from 'react-native-gesture-handler';
+import { State as GestureState, ScrollView, Gesture, GestureDetector, GestureUpdateEvent, PanGestureHandlerEventPayload } from 'react-native-gesture-handler';
 import { Picker } from '@react-native-picker/picker';
 import ModalDialog from './ModalDialog';
 import ErrorText from '../types/ErrorText';
@@ -117,7 +117,7 @@ class Search extends React.Component<Props, State> {
       prefLocationId: "",
     }
     this.props.navigation.addListener("focus", this.onNavigationFocus);
-    this.state.footerHeight.addListener(this.onFooterHeightChange);
+    //this.state.footerHeight.addListener(this.onFooterHeightChange);
   }
 
   componentDidMount = () => {
@@ -204,11 +204,13 @@ class Search extends React.Component<Props, State> {
     });
   }
 
+  /*
   onFooterHeightChange = (e: any) => {
     if (e) {
       this.setState({ footerHeightValue: e.value });
     }
   }
+  */
 
   initDates = () => {
     let enter = new Date();
@@ -359,11 +361,13 @@ class Search extends React.Component<Props, State> {
     );
   }
 
+  /*
   onFooterStateChange = (e: any) => {
     if (e && e.nativeEvent && e.nativeEvent.state === GestureState.END) {
       this.toggleFooter();
     }
   }
+  */
 
   toggleFooter = () => {
     if (this.state.minDragOffset < 0) {
@@ -383,7 +387,11 @@ class Search extends React.Component<Props, State> {
         toValue: this.containerHeight * 0.8,
         duration: 250,
         useNativeDriver: false,
-      }).start();
+      }).start(() => {
+        this.setState({
+          footerHeightValue: this.containerHeight * 0.8
+        });
+      });
     } else {
       this.setState({
         footerHeight: new Animated.Value(this.containerHeight * 0.8),
@@ -402,7 +410,11 @@ class Search extends React.Component<Props, State> {
         toValue: Search.footerHeightCollapsed,
         duration: (RuntimeInfo.isIOS() ? 250 : 1),
         useNativeDriver: false,
-      }).start();
+      }).start(() => {
+        this.setState({
+          footerHeightValue: Search.footerHeightCollapsed
+        });
+      });
     } else {
       this.setState({
         footerHeight: new Animated.Value(Search.footerHeightCollapsed),
@@ -411,14 +423,12 @@ class Search extends React.Component<Props, State> {
     }
   }
 
-  onFooterGestureEvent = (e: any) => {
-    if (e && e.nativeEvent) {
-      Animated.timing(this.state.footerHeight, {
-        toValue: (-1 * e.nativeEvent.y + this.state.footerHeightValue),
-        duration: 0,
-        useNativeDriver: false,
-      }).start();
-    }
+  onFooterGestureEvent = (e: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
+    Animated.timing(this.state.footerHeight, {
+      toValue: (-1 * e.translationY + this.state.footerHeightValue),
+      duration: 0,
+      useNativeDriver: false,
+    }).start();
   }
 
   updateCanSearch = async () => {
@@ -493,7 +503,7 @@ class Search extends React.Component<Props, State> {
     }
   }
 
-  setEnterDate = (event: Event, selectedDate?: Date) => {
+  setEnterDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
     if (selectedDate === undefined) {
       this.setState({
         showEnterPicker: false
@@ -549,7 +559,7 @@ class Search extends React.Component<Props, State> {
     }
   }
 
-  setLeaveDate = (event: Event, selectedDate?: Date) => {
+  setLeaveDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
     if (selectedDate === undefined) {
       this.setState({
         showLeavePicker: false
@@ -1042,13 +1052,16 @@ class Search extends React.Component<Props, State> {
 
     let dragArea = <></>;
     if (RuntimeInfo.isIOS()) {
+      const gesture = Gesture.Pan()
+        .onUpdate(this.onFooterGestureEvent)
+        .onEnd(() => this.toggleFooter());
       dragArea = (
         <Animated.View style={[style.footerNav, { height: this.state.footerHeight }]}>
-          <PanGestureHandler onHandlerStateChange={this.onFooterStateChange} onGestureEvent={this.onFooterGestureEvent} activeOffsetY={this.state.minDragOffset}>
+          <GestureDetector gesture={gesture}>
             <View style={style.dragArea}>
               <View style={style.dragger}></View>
             </View>
-          </PanGestureHandler>
+          </GestureDetector>
           {staticContent}
           {formContent}
         </Animated.View>
