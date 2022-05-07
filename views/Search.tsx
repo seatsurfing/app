@@ -2,7 +2,7 @@ import React from 'react';
 import { Text, View, TouchableOpacity, ImageBackground, StyleSheet, ActivityIndicator, Animated, FlatList, Pressable } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Styles, PrimaryTextSize, CaptionTextSize } from '../types/Styles';
-import DateTimePicker, { DateTimePickerEvent, Event } from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Formatting, Location, Ajax, AjaxCredentials, Space, Booking, AjaxError, UserPreference } from '../commons';
 import { RouteProp } from '@react-navigation/native';
 import { AuthContext } from '../types/AuthContextData';
@@ -10,7 +10,7 @@ import { withTranslation } from 'react-i18next';
 import { i18n } from 'i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/build/Ionicons';
-import { State as GestureState, ScrollView, Gesture, GestureDetector, GestureUpdateEvent, PanGestureHandlerEventPayload } from 'react-native-gesture-handler';
+import { ScrollView, Gesture, GestureDetector, GestureUpdateEvent, PanGestureHandlerEventPayload } from 'react-native-gesture-handler';
 import { Picker } from '@react-native-picker/picker';
 import ModalDialog from './ModalDialog';
 import ErrorText from '../types/ErrorText';
@@ -360,14 +360,6 @@ class Search extends React.Component<Props, State> {
       </TouchableOpacity>
     );
   }
-
-  /*
-  onFooterStateChange = (e: any) => {
-    if (e && e.nativeEvent && e.nativeEvent.state === GestureState.END) {
-      this.toggleFooter();
-    }
-  }
-  */
 
   toggleFooter = () => {
     if (this.state.minDragOffset < 0) {

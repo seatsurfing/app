@@ -158,10 +158,10 @@ const resources = {
 };
 
 i18n
-//.use(languageDetector)
 .use(initReactI18next)
 .init({
     resources,
+    compatibilityJSON: 'v3',
     lng: deviceLanguage,
     fallbackLng: "en",
     keySeparator: false
