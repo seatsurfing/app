@@ -33,11 +33,11 @@ class About extends React.Component<Props, State> {
           <Text style={Styles.text}>{this.props.i18n.t("germany")}</Text>
           <Text style={Styles.text}></Text>
           <Text style={Styles.text}>{this.props.i18n.t("contact")}:</Text>
-          <Text style={Styles.text}>info@seatsurfing.de</Text>
+          <Text style={Styles.text}>info@seatsurfing.app</Text>
           <Text style={Styles.text}></Text>
-          <TouchableOpacity onPress={() => Linking.openURL("https://seatsurfing.de/imprint.html")}><Text style={Styles.formButtom}>{this.props.i18n.t("moreInfo")}</Text></TouchableOpacity>
+          <TouchableOpacity onPress={() => Linking.openURL("https://seatsurfing.app/contact/")}><Text style={Styles.formButtom}>{this.props.i18n.t("moreInfo")}</Text></TouchableOpacity>
           <Text style={Styles.text}></Text>
-          <TouchableOpacity onPress={() => Linking.openURL("https://seatsurfing.de/privacy.html")}><Text style={Styles.formButtom}>{this.props.i18n.t("privacy")}</Text></TouchableOpacity>
+          <TouchableOpacity onPress={() => Linking.openURL("https://seatsurfing.app/privacy-policy/")}><Text style={Styles.formButtom}>{this.props.i18n.t("privacy")}</Text></TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
     )
