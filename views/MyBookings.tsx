@@ -1,8 +1,7 @@
 import React from 'react';
-import { Text, SafeAreaView, TouchableOpacity, ActivityIndicator, Button, View, StyleSheet } from 'react-native';
+import { Text, SafeAreaView, TouchableOpacity, ActivityIndicator, Button, View, StyleSheet, FlatList } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Styles } from '../types/Styles';
-import { FlatList } from 'react-native-gesture-handler';
 import { Booking } from '../commons';
 import { Formatting } from '../commons';
 import ModalDialog from './ModalDialog';

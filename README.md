@@ -1,6 +1,6 @@
 # Seatsurfing Mobile App
 
-The [Seatsurfing](https://seatsurfing.de) Mobile App for Android and iOS is a convenient way for booking spaces.
+The [Seatsurfing](https://seatsurfing.app) Mobile App for Android and iOS is a convenient way for booking spaces.
 
 The app is based on [Expo SDK](https://expo.dev) using [React Native](https://reactnative.dev).
 
