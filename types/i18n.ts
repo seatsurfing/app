@@ -78,6 +78,8 @@ const resources = {
             "workday-6": "Samstag",
             "workingHours": "Bürozeiten",
             "to": "bis",
+            "pwa1": "Die Seatsurfing Mobile App wird zum 30. Juli 2022 eingestellt. Bitte nutze stattdessen die Progressive Web App (PWA) von Seatsurfing. Du kannst die PWA sogar auf Deinem Smartphone/Tablet installieren - wie eine normale App.",
+            "pwa2": "Um die Seatsurfing PWA aufzurufen, öffne die Seatsurfing URL Deiner Organisation in Deinem Web Browser. Wenn Du unsere Cloud-Lösung nutzt, gehe zu:",
         }
     },
     en: {
@@ -153,6 +155,8 @@ const resources = {
             "workday-6": "Saturday",
             "workingHours": "Working hours",
             "to": "to",
+            "pwa1": "The Seatsurfing mobile app is going to be discontinued as of July 30th 2022. Please use Seatsurfing's Progressive Web App (PWA) instead. You can even install the PWA on your smartphone or tablet - just like a regular app.",
+            "pwa2": "To access the Seatsurfing PWA, open your organization's Seatsurfing URL in your web browser. If you're using our cloud instance, go to:",
         }
     }
 };

@@ -15,6 +15,7 @@ import { Picker } from '@react-native-picker/picker';
 import ModalDialog from './ModalDialog';
 import ErrorText from '../types/ErrorText';
 import RuntimeInfo from '../types/RuntimeInfo';
+import * as WebBrowser from 'expo-web-browser';
 
 interface Props {
   navigation: StackNavigationProp<RootStackParamList>
@@ -53,6 +54,7 @@ interface State {
   prefWorkdayEnd: number
   prefWorkdays: number[]
   prefLocationId: string
+  showPwaHint: boolean
 }
 
 class Search extends React.Component<Props, State> {
@@ -115,9 +117,9 @@ class Search extends React.Component<Props, State> {
       prefWorkdayEnd: 0,
       prefWorkdays: [],
       prefLocationId: "",
+      showPwaHint: true
     }
     this.props.navigation.addListener("focus", this.onNavigationFocus);
-    //this.state.footerHeight.addListener(this.onFooterHeightChange);
   }
 
   componentDidMount = () => {
@@ -769,6 +771,10 @@ class Search extends React.Component<Props, State> {
     );
   }
 
+  openPWA = () => {
+    WebBrowser.openBrowserAsync("https://app.seatsurfing.app/ui/");
+  }
+
   render = () => {
     const style = StyleSheet.create({
       mapContainer: {
@@ -1078,8 +1084,22 @@ class Search extends React.Component<Props, State> {
       );
     }
 
+    let pwaModalButtons = [
+      { label: this.props.i18n.t("ok"), onPress: () => this.setState({ showPwaHint: false }) },
+    ];
+    let pwaModal = (
+      <ModalDialog visible={this.state.showPwaHint} buttons={pwaModalButtons}>
+        <Text style={{ ... Styles.text, marginBottom: 10 }}>{this.props.i18n.t("pwa1")}</Text>
+        <Text style={{ ... Styles.text, marginBottom: 10 }}>{this.props.i18n.t("pwa2")}</Text>
+        <TouchableOpacity onPress={() => this.openPWA()}>
+          <Text style={{ ... Styles.text, color: "blue" }}>https://app.seatsurfing.app/ui/</Text>
+        </TouchableOpacity>
+      </ModalDialog>
+    )
+
     return (
       <SafeAreaView style={Styles.container} edges={['right', 'top', 'left']} onLayout={this.onContainerLayout}>
+        {pwaModal}
         {bookingNamesModal}
         {confirmModal}
         <ModalDialog visible={this.state.showSuccess}>
